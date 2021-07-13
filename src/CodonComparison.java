@@ -42,8 +42,89 @@ public class CodonComparison {
 	//this method gets and prints the 8 reconstructions of each locus, might make it a return method later
 	public static void getReconstructions(String path)
 	{
-		//System.out.println(path);
+		String newPath = "";	//will be used to pass in the path to the subdirectories
+		//in each locus, there are the eight reconstructions, write 8 helper methods to return the LCA string	
+		System.out.println(path);
+		File dir = new File(path);
+		String [] reconDirs = dir.list(new MyDirectoryFilter());			//filters out any files that have extensions, leaving only directories
+		String [] recons = new String[8];
+		for(int i = 0; i < 8; i++)
+		{
+			switch(i) {
+			case 0: recons[i] = fastML_free_marg(path + "\\" + reconDirs[0]); 
+					System.out.println("fastML_free_marg: " + recons[i]);
+					break;
+			case 1: recons[i] = fastML_free_joint(path + "\\" + reconDirs[0]); 
+					System.out.println("fastML_free_joint: " + recons[i]);
+					break;
+			case 2: recons[i] = fastML_sp_marg(path + "\\" + reconDirs[1]); 
+					System.out.println("fastML_sp_marg: " + recons[i]);
+					break;
+			case 3: recons[i] = fastML_sp_joint(path + "\\" + reconDirs[1]); 
+					System.out.println("fastML_sp_joint: " + recons[i]);
+					break;
+			case 4: recons[i] = prank_free(path + "\\" + reconDirs[2]); 
+					System.out.println("prank_free: " + recons[i]);
+					break;
+			case 5: recons[i] = prank_sp(path + "\\" + reconDirs[3]); 
+					System.out.println("prank_joint: " + recons[i]); 
+					break;
+			case 6: recons[i] = prequel_free(path + "\\" + reconDirs[4]); 
+					System.out.println("prequel_free: " + recons[i]);
+					break;
+			case 7: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
+					System.out.println("prequel_sp: " + recons[i]); 
+					break;
+			default: System.out.println("ERROR");
+			}
+		}
+		
+		/*
+		for(String x : recons)
+		{
+			System.out.println(x);
+		}
+		*/
+		
+		
 	}
+		
+
+	
+	//helper methods
+	private static String prequel_free(String path)
+	{
+		return path;
+	}
+	private static String prequel_sp(String path)
+	{
+		return path;
+	}
+	private static String fastML_free_marg(String path)
+	{
+		return path;
+	}
+	private static String fastML_free_joint(String path)
+	{
+		return path;
+	}
+	private static String fastML_sp_marg(String path)
+	{
+		return path;
+	}
+	private static String fastML_sp_joint(String path)
+	{
+		return path;
+	}
+	private static String prank_free(String path)
+	{
+		return path;
+	}
+	private static String prank_sp(String path)
+	{
+		return path;
+	}
+	
 	
 	
 	
@@ -56,6 +137,23 @@ public class CodonComparison {
 		public boolean accept(File dir, String name) {
 			
 			if(name.equals(".git") || name.equals("bin") || name.equals("src"))
+			{
+				return false;
+			}
+			
+			else {
+				return true;
+			}
+			
+		}
+	}
+	
+	public static class MyDirectoryFilter implements FilenameFilter {
+
+		@Override
+		public boolean accept(File dir, String name) {
+			
+			if(name.contains("."))
 			{
 				return false;
 			}
