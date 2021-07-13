@@ -12,7 +12,8 @@ public class CodonComparison {
 	
 	public static void getEmergingORFs()
 	{
-		
+		ufnanf
 	}
 	
 }
+    
