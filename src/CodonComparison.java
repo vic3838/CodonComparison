@@ -1,5 +1,12 @@
 import java.util.*;
 import java.io.*;
+import org.biojava.nbio.alignment.Alignments;
+import org.biojava.nbio.alignment.template.*; 
+import org.biojava.nbio.core.sequence.DNASequence; 
+import org.biojava.nbio.core.sequence.MultipleSequenceAlignment;
+import org.biojava.nbio.core.sequence.compound.AminoAcidCompound; 
+import org.biojava.nbio.core.sequence.io.FastaReaderHelper; 
+import org.biojava.nbio.core.util.ConcurrencyTools;
 
 //@Author Vijay Kiran Cherupally
 //god please help me
@@ -43,7 +50,6 @@ public class CodonComparison {
 	//this method gets and prints the 8 reconstructions of each locus, might make it a return method later
 	public static void getReconstructions(String path) throws IOException
 	{
-		String newPath = "";	//will be used to pass in the path to the subdirectories
 		//in each locus, there are the eight reconstructions, write 8 helper methods to return the LCA string	
 		System.out.println(path);
 		File dir = new File(path);
@@ -278,6 +284,13 @@ public class CodonComparison {
 		seq = seqsAndNodes[1][index];
 		return seq;	
 	}
+	
+	//this method will lead the alignments of the whatever sequences we give it
+	public static void align()
+	{
+		DNASequence sequence = new DNASequence();
+	}	
+	
 	
 	
 	//filename filter override method to make sure we ignore certain directories, specifically .git, bin, and arc
