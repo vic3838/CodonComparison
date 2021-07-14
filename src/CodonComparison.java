@@ -11,7 +11,7 @@ public class CodonComparison {
 	static final String STOP3 = "TAG";
 	
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
 		
@@ -19,7 +19,7 @@ public class CodonComparison {
 	}
 	
 	
-	public static void getEmergingORFs()
+	public static void getEmergingORFs() throws IOException
 	{
 		String path = "D:\\College\\TECBio\\CodonComparison";	//create a string with the path of the current directory, will be used and edited
 		File dir = new File(path);								//creating the file of the current directory
@@ -40,7 +40,7 @@ public class CodonComparison {
 	}
 	
 	//this method gets and prints the 8 reconstructions of each locus, might make it a return method later
-	public static void getReconstructions(String path)
+	public static void getReconstructions(String path) throws IOException
 	{
 		String newPath = "";	//will be used to pass in the path to the subdirectories
 		//in each locus, there are the eight reconstructions, write 8 helper methods to return the LCA string	
@@ -96,52 +96,106 @@ public class CodonComparison {
 	}
 	private static String prequel_sp(String path)	throws IOException
 	{
-		path += "\\ORF_alignement.Seub-Sarb.fa";		//create the path for the file we need to open
-		File file = new File(path);						//file we need to enter 
-		FileWriter fwrite = new FileWriter(file);		
-		PrintWriter writer = new PrintWriter(fwrite);
-		
+		path += "\\ORF_alignement.Seub-Sarb.fa";		//create the path for the file we need to open	
 		Scanner fileScan = new Scanner(new FileInputStream(path));
 		String fileLine = "";
-		boolean newSequence = false;
+		String seq = "";
 		while(fileScan.hasNextLine()){
-			fileLine = fileScan.nextLine();				//this is the current line
-			if(fileLine.charAt(0) == '>')
+			fileLine = fileScan.nextLine();		
+			if(fileLine.charAt(0) != '>')
 			{
-				newSequence = true;
-			}
-			//if it is a sequence and we have just started a new sequence, add the line to fastasequence
-			if(fileLine.charAt(0) != '>' && newSequence)
-			{
-				fileLine = fileLine.toUpperCase();
-				newSequence = false;
+				seq += fileLine;
 			}
 		}
 		
+		return seq;
+	}
+	private static String fastML_free_marg(String path) throws IOException
+	{
+		path += "\\seq.marginal.txt";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
 		
-		writer.close();
+		boolean foundSeq = false;
+		while(fileScan.hasNextLine()) {
+			fileLine = fileScan.nextLine();
+			if(foundSeq) {					//if foundSeq = true, that means we have found the sequence and this next line is the one we need
+				seq = fileLine;
+				break;
+			}
+			else if(fileLine.contains(">N1")) {
+				foundSeq = true;
+			}			
+		}		
+		return seq;
+	}
+	private static String fastML_free_joint(String path) throws IOException
+	{
+		path += "\\seq.joint.txt";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
 		
-		return path;
+		boolean foundSeq = false;
+		while(fileScan.hasNextLine()) {
+			fileLine = fileScan.nextLine();
+			if(foundSeq) {					//if foundSeq = true, that means we have found the sequence and this next line is the one we need
+				seq = fileLine;
+				break;
+			}
+			else if(fileLine.contains(">N1")) {
+				foundSeq = true;
+			}			
+		}		
+		return seq;
 	}
-	private static String fastML_free_marg(String path)
-	{
-		return path;
+	private static String fastML_sp_marg(String path) throws IOException
+	{ 
+		path += "\\seq.marginal.txt";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
+		
+		boolean foundSeq = false;
+		while(fileScan.hasNextLine()) {
+			fileLine = fileScan.nextLine();
+			if(foundSeq) {					//if foundSeq = true, that means we have found the sequence and this next line is the one we need
+				seq = fileLine;
+				break;
+			}
+			else if(fileLine.contains(">N1")) {
+				foundSeq = true;
+			}			
+		}		
+		return seq;
 	}
-	private static String fastML_free_joint(String path)
+	private static String fastML_sp_joint(String path) throws IOException
 	{
-		return path;
+		path += "\\seq.joint.txt";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
+		
+		boolean foundSeq = false;
+		while(fileScan.hasNextLine()) {
+			fileLine = fileScan.nextLine();
+			if(foundSeq) {					//if foundSeq = true, that means we have found the sequence and this next line is the one we need
+				seq = fileLine;
+				break;
+			}
+			else if(fileLine.contains(">N1")) {
+				foundSeq = true;
+			}			
+		}		
+		return seq;
 	}
-	private static String fastML_sp_marg(String path)
+	
+	//need to get the largest identified node
+	private static String prank_free(String path) throws IOException
 	{
-		return path;
-	}
-	private static String fastML_sp_joint(String path)
-	{
-		return path;
-	}
-	private static String prank_free(String path)
-	{
-		return path;
+		path += "\\ORF_alignment.anc.fas";
+		
 	}
 	private static String prank_sp(String path)
 	{
