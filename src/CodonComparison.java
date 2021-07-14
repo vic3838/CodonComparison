@@ -33,6 +33,7 @@ public class CodonComparison {
 			{
 				//return an arraylist of the 8 reconstructed sequences and print it
 				getReconstructions(x.getAbsolutePath());
+				System.out.println();
 				//System.out.println(x.toString());
 			}
 			
@@ -67,7 +68,7 @@ public class CodonComparison {
 					System.out.println("prank_free: " + recons[i]);
 					break;
 			case 5: recons[i] = prank_sp(path + "\\" + reconDirs[3]); 
-					System.out.println("prank_joint: " + recons[i]); 
+					System.out.println("prank_sp: " + recons[i]); 
 					break;
 			case 6: recons[i] = prequel_free(path + "\\" + reconDirs[4]); 
 					System.out.println("prequel_free: " + recons[i]);
@@ -197,7 +198,6 @@ public class CodonComparison {
 		Scanner fileScan = new Scanner(new FileInputStream(path));
 		String fileLine = "";
 		String seq = "";
-		
 		//arrays to hold the sequences
 		String[][] seqsAndNodes = new String[2][10];
 		
@@ -219,18 +219,65 @@ public class CodonComparison {
 			}				
 		}
 		
+		//this is to get the name of the highest node, which is the LCA, and find its position in the 2d array
+		//once finding this index, we can select the corresponding string
+		String loc = ">#" + col + "#";
+		int index = -1;
+		for(int i = 0; i < 10; i++)
+		{
+			if(seqsAndNodes[0][i].equals(loc)) {
+				index = i;
+				break;
+			}
+		}
 		
-		
-		return path;
-		
+		seq = seqsAndNodes[1][index];
+		return seq;		
 	}
-	private static String prank_sp(String path)
+	
+	
+	private static String prank_sp(String path) throws IOException
 	{
-		return path;
+		path += "\\ORF_alignment.anc.fas";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
+		//arrays to hold the sequences
+		String[][] seqsAndNodes = new String[2][10];
+		
+		boolean storeSeq = false;
+		int col = 0;
+		//need to read through the file, find the highest numbered node, and then choose the sequence related to that...
+		//probably add all the reconstructed seqs to an array and then choose the seq after so i dont have to read the file again
+		while(fileScan.hasNextLine()){
+			fileLine = fileScan.nextLine();
+			if(storeSeq) {
+				seqsAndNodes[1][col] = fileLine;
+				col++;
+				storeSeq = false;
+			}
+			
+			else if(fileLine.contains(">#")) {
+				seqsAndNodes[0][col] = fileLine;
+				storeSeq = true;
+			}				
+		}
+		
+		//this is to get the name of the highest node, which is the LCA, and find its position in the 2d array
+		//once finding this index, we can select the corresponding string
+		String loc = ">#" + col + "#";
+		int index = -1;
+		for(int i = 0; i < 10; i++)
+		{
+			if(seqsAndNodes[0][i].equals(loc)) {
+				index = i;
+				break;
+			}
+		}
+		
+		seq = seqsAndNodes[1][index];
+		return seq;	
 	}
-	
-	
-	
 	
 	
 	//filename filter override method to make sure we ignore certain directories, specifically .git, bin, and arc
