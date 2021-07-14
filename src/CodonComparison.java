@@ -1,10 +1,14 @@
 import java.util.*;
 import java.io.*;
 import org.biojava.nbio.alignment.Alignments;
-import org.biojava.nbio.alignment.template.*; 
+import org.biojava.nbio.alignment.template.ProfileProfileAligner; 
+import org.biojava.nbio.alignment.Alignments.ProfileProfileAlignerType;
+import org.biojava.nbio.core.alignment.SimpleProfile;
+import org.biojava.nbio.core.alignment.template.Profile;
+import org.biojava.nbio.core.alignment.template.AlignedSequence;
 import org.biojava.nbio.core.sequence.DNASequence; 
 import org.biojava.nbio.core.sequence.MultipleSequenceAlignment;
-import org.biojava.nbio.core.sequence.compound.AminoAcidCompound; 
+import org.biojava.nbio.core.sequence.compound.NucleotideCompound; 
 import org.biojava.nbio.core.sequence.io.FastaReaderHelper; 
 import org.biojava.nbio.core.util.ConcurrencyTools;
 
@@ -21,6 +25,7 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
+		align();
 		
 		
 	}
@@ -286,9 +291,33 @@ public class CodonComparison {
 	}
 	
 	//this method will lead the alignments of the whatever sequences we give it
-	public static void align()
+	public static void align() 
 	{
-		DNASequence sequence = new DNASequence();
+		try {
+		//ybr seqs for test
+		//fastmlfreemarg
+		DNASequence sequence1 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCAATTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTAGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
+		//fastmlspmarg
+		DNASequence sequence2 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTAGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
+		//pranksp
+		DNASequence sequence3 = new DNASequence("GAGGCTCCTGTCTATATATACCATTTGACATTCTATTCTATTCTACAACT----GTTAAAGTGAGTGGTTTTTATTGTAGAAGCTGGTTTTAAGGGTGGTATTTTTT--CTCCTTCCCTGGGTTTTGT------------ATATTTTATTGTTCTCCTATCTTAA");
+		
+		List<DNASequence> lst = new ArrayList<DNASequence>();
+		lst.add(sequence1);
+		lst.add(sequence2);
+		lst.add(sequence3);
+		Profile<DNASequence, NucleotideCompound> results = Alignments.getMultipleSequenceAlignment(lst);
+		
+		List<AlignedSequence<DNASequence, NucleotideCompound>> huuuuh = results.getAlignedSequences();
+		for(AlignedSequence<DNASequence, NucleotideCompound> x : huuuuh)
+		{
+			System.out.println(x);
+		}
+		
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}	
 	
 	
