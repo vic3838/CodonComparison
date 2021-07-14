@@ -192,9 +192,36 @@ public class CodonComparison {
 	}
 	
 	//need to get the largest identified node
-	private static String prank_free(String path) throws IOException
-	{
+	private static String prank_free(String path) throws IOException{
 		path += "\\ORF_alignment.anc.fas";
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
+		
+		//arrays to hold the sequences
+		String[][] seqsAndNodes = new String[2][10];
+		
+		boolean storeSeq = false;
+		int col = 0;
+		//need to read through the file, find the highest numbered node, and then choose the sequence related to that...
+		//probably add all the reconstructed seqs to an array and then choose the seq after so i dont have to read the file again
+		while(fileScan.hasNextLine()){
+			fileLine = fileScan.nextLine();
+			if(storeSeq) {
+				seqsAndNodes[1][col] = fileLine;
+				col++;
+				storeSeq = false;
+			}
+			
+			else if(fileLine.contains(">#")) {
+				seqsAndNodes[0][col] = fileLine;
+				storeSeq = true;
+			}				
+		}
+		
+		
+		
+		return path;
 		
 	}
 	private static String prank_sp(String path)
