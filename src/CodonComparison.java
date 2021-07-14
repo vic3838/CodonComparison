@@ -88,16 +88,39 @@ public class CodonComparison {
 		
 		
 	}
-		
 
-	
 	//helper methods
 	private static String prequel_free(String path)
 	{
 		return path;
 	}
-	private static String prequel_sp(String path)
+	private static String prequel_sp(String path)	throws IOException
 	{
+		path += "\\ORF_alignement.Seub-Sarb.fa";		//create the path for the file we need to open
+		File file = new File(path);						//file we need to enter 
+		FileWriter fwrite = new FileWriter(file);		
+		PrintWriter writer = new PrintWriter(fwrite);
+		
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		boolean newSequence = false;
+		while(fileScan.hasNextLine()){
+			fileLine = fileScan.nextLine();				//this is the current line
+			if(fileLine.charAt(0) == '>')
+			{
+				newSequence = true;
+			}
+			//if it is a sequence and we have just started a new sequence, add the line to fastasequence
+			if(fileLine.charAt(0) != '>' && newSequence)
+			{
+				fileLine = fileLine.toUpperCase();
+				newSequence = false;
+			}
+		}
+		
+		
+		writer.close();
+		
 		return path;
 	}
 	private static String fastML_free_marg(String path)
