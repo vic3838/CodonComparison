@@ -25,9 +25,47 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
-		align();
+		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
+		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
+		{
+			System.out.println(x.toString());
+		}
 		
 		
+		//TODO: make the void methods getEmergingORFs and align return actual values that can be operated on in the main method, will need to loop
+		//		might have to call align() from getEmergingORFs()
+		//now that i have the aligned sequences, the next basic step is to get the # of aligned codons and output them to a table
+		
+		
+		
+		
+	}
+	
+	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
+	public static int numberOfAlignedCodons(String recon, String extant)
+	{
+		//since the strings are aligned, we can read codon by codon. worry about finding an ORF later
+		StringBuilder rec = new StringBuilder(recon);
+		StringBuilder ext = new StringBuilder(extant);
+		int codons = 0;
+		int alignedCodons = 0;
+		int length = recon.length();
+		String codon1 = null;
+		String codon2 = null;
+		for(int i = 0; i < length; i += 3) {
+			codon1 = rec.substring(i, i+3);
+			codon2 = ext.substring(i, i+ 3);
+			
+			if(codon1.equals(codon2)) {
+				alignedCodons++;
+			}
+			
+			codons++;
+		}
+		
+		if(codons != length/3) System.out.println("ERROR");
+	
+		return alignedCodons;
 	}
 	
 	
@@ -53,7 +91,7 @@ public class CodonComparison {
 	}
 	
 	//this method gets and prints the 8 reconstructions of each locus, might make it a return method later
-	public static void getReconstructions(String path) throws IOException
+	public static String[] getReconstructions(String path) throws IOException
 	{
 		//in each locus, there are the eight reconstructions, write 8 helper methods to return the LCA string	
 		System.out.println(path);
@@ -98,6 +136,7 @@ public class CodonComparison {
 		}
 		*/
 		
+		return recons;
 		
 	}
 
@@ -291,8 +330,9 @@ public class CodonComparison {
 	}
 	
 	//this method will lead the alignments of the whatever sequences we give it
-	public static void align() 
+	public static List<AlignedSequence<DNASequence, NucleotideCompound>> align() 
 	{
+		List<AlignedSequence<DNASequence, NucleotideCompound>> aligned = null;
 		try {
 		//ybr seqs for test
 		//fastmlfreemarg
@@ -322,17 +362,21 @@ public class CodonComparison {
 		
 		Profile<DNASequence, NucleotideCompound> results = Alignments.getMultipleSequenceAlignment(lst);
 		
-		List<AlignedSequence<DNASequence, NucleotideCompound>> huuuuh = results.getAlignedSequences();
+		aligned = results.getAlignedSequences();
+		
+		/*
 		for(AlignedSequence<DNASequence, NucleotideCompound> x : huuuuh)
 		{
-			System.out.println(x);
+			System.out.println(x.toString());
 		}
-		
+		*/
 		}
 		catch(Exception e){
 			e.printStackTrace();
 		}
-	}	
+		return aligned;
+	}
+		
 	
 	
 	
