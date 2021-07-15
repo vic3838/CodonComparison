@@ -63,8 +63,7 @@ public class CodonComparison {
 			codons++;
 		}
 		
-		if(codons != length/3) System.out.println("ERROR");
-	
+		if(codons != length/3) System.out.println("ERROR");	
 		return alignedCodons;
 	}
 	
@@ -96,7 +95,16 @@ public class CodonComparison {
 				for(AlignedSequence<DNASequence, NucleotideCompound> y : alignedSeqs)
 				{
 					System.out.println(y.toString());
+					
 				}
+
+				//use list iterator to save on runtime, get the last item of the list (extant sequence first)
+				extant = alignedSeqs.get(alignedSeqs.size() - 1).toString();
+				System.out.println("TEST: " + extant);
+				Iterator<AlignedSequence<DNASequence, NucleotideCompound>> it = alignedSeqs.iterator();
+				//while
+				
+				
 				System.out.println();
 
 				
