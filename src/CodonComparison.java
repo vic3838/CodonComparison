@@ -1,8 +1,11 @@
 import java.util.*;
 import java.io.*;
 import org.biojava.nbio.alignment.Alignments;
-import org.biojava.nbio.alignment.template.ProfileProfileAligner; 
-import org.biojava.nbio.alignment.Alignments.ProfileProfileAlignerType;
+import org.biojava.nbio.alignment.Alignments.PairwiseSequenceAlignerType;
+import org.biojava.nbio.core.alignment.matrices.SubstitutionMatrixHelper;
+import org.biojava.nbio.core.alignment.template.SubstitutionMatrix;
+import org.biojava.nbio.alignment.SimpleGapPenalty;
+import org.biojava.nbio.core.alignment.template.SequencePair;
 import org.biojava.nbio.core.alignment.SimpleProfile;
 import org.biojava.nbio.core.alignment.template.Profile;
 import org.biojava.nbio.core.alignment.template.AlignedSequence;
@@ -76,7 +79,10 @@ public class CodonComparison {
 		
 		File [] emergingORFs = dir.listFiles(new MyFileNameFilter()); 	//get every item in this directory except for the git, bin, and src directories
 		String[] recons;
-		String extant;
+		String recon;													//holder for the recon
+		String extant;													//holder for the extant seq
+		AlignedSequence<DNASequence, NucleotideCompound> rec;			//holders for the aligned seqs
+		AlignedSequence<DNASequence, NucleotideCompound> ext;
 		//going through the emergingORFs, YAL, YBr, ...
 		for(File x : emergingORFs)
 		{		
@@ -91,21 +97,34 @@ public class CodonComparison {
 				
 				System.out.println();
 				
-				List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align(recons, extant);
-				for(AlignedSequence<DNASequence, NucleotideCompound> y : alignedSeqs)
-				{
-					System.out.println(y.toString());
+				//pairwise alignment of each reconstruction with the extant sequence
+				for(String y: recons) {
+					SequencePair<DNASequence, NucleotideCompound> alignment = align(y, extant);	//align the sequences
+					rec = alignment.getQuery();
+					ext = alignment.getTarget();
+					recon = rec.toString();						//string representation of the reconstruction alignment
+					extant = ext.toString();					//string representation of the extant alignment
+					
+					
 					
 				}
-
-				//use list iterator to save on runtime, get the last item of the list (extant sequence first)
-				extant = alignedSeqs.get(alignedSeqs.size() - 1).toString();
-				System.out.println("TEST: " + extant);
-				Iterator<AlignedSequence<DNASequence, NucleotideCompound>> it = alignedSeqs.iterator();
-				//while
 				
 				
-				System.out.println();
+//				List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align(recons, extant);
+//				for(AlignedSequence<DNASequence, NucleotideCompound> y : alignedSeqs)
+//				{
+//					System.out.println(y.toString());
+//					
+//				}
+//
+//				//use list iterator to save on runtime, get the last item of the list (extant sequence first)
+//				extant = alignedSeqs.get(alignedSeqs.size() - 1).toString();
+//				System.out.println("TEST: " + extant);
+//				Iterator<AlignedSequence<DNASequence, NucleotideCompound>> it = alignedSeqs.iterator();
+//				//while
+//				
+//				
+//				System.out.println();
 
 				
 			}
@@ -381,60 +400,83 @@ public class CodonComparison {
 	}
 	
 	//this method will lead the alignments of the whatever sequences we give it
-	public static List<AlignedSequence<DNASequence, NucleotideCompound>> align(String[] recons, String extant) 
+	public static SequencePair<DNASequence, NucleotideCompound> align(String recons, String extant) 
 	{
-		List<AlignedSequence<DNASequence, NucleotideCompound>> aligned = null;
+		SequencePair<DNASequence, NucleotideCompound> psa = null;
 		try {
-			//create a list of the DNASequences with the reconstructed sequences and the extant sequence
-			List<DNASequence> lst = new ArrayList<DNASequence>();
-			for(String x: recons){
-				lst.add(new DNASequence(x));
-			}
-			lst.add(new DNASequence(extant));
+			DNASequence rec = new DNASequence("AATTGAAGAATGTGCATAAATTTATATATGTTTGTTGTTCTGGCTTTTTATAAGGGACATGAGGAGAAGTGTCTTTGTTAGATGCATGAGTTATCTCAATTTGTTTCTGATCTTAGAAGCTATTCTATGCCCAGTCGACTCCTTGATTTCGATCCCAAATGGCATCATAGTAGTTTCTGAGCTAGTATCACCATTTTCCAATTCTAATCCATCCCGAAGACTTTTTCTAAAGGTGAAGCCTTCTTCTTGTCTTAATGTGTTGTATCTGGACTTATGTTGTAATGGCTTAATCATTGCTGATGCAGGAATTGGGGGATAG");
+			DNASequence ext = new DNASequence("--ATGAAGGATATGAATAGTATTAGATA----TGTA-TTCTTTTTTTTTTCCAGGGACATAAAGAGTTGT--TTTTATAAGGTGCG-GAGTTATCTCAATTTGCTTCTGATTTTAGAAGCTATTCTATGCCCGGTCGACTCTTTGATTTCGATCCCAAACGGCATCATGGTAGTTTCGGAGCCAGATTCGCCATTTTCCCACTCTAATCCATCTCGAAGACTTTTTCGAAAGGTAAACCCTTCTTCTTGTCTCAGCGTGTTATATTTGGACTTATGCTGTAGCGGCTTGATCATTGCCGAAGCAGGTATTGGCGGATAA");
+				
+			SubstitutionMatrix<NucleotideCompound> matrix = SubstitutionMatrixHelper.getNuc4_4();
+			
+			SimpleGapPenalty gapP = new SimpleGapPenalty();
+			gapP.setOpenPenalty((short)5);
+			gapP.setExtensionPenalty((short)2);
+			
+			psa = Alignments.getPairwiseAlignment(rec, ext, PairwiseSequenceAlignerType.GLOBAL, gapP, matrix);
+			
+			System.out.println(psa);
 			
 			
-			
-//		//ybr seqs for test
-//		//fastmlfreemarg
-//		DNASequence sequence1 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCAATTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTAGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
-//		//fastML_free_joint
-//		DNASequence sequence2 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTGGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
-//		//fastmlspmarg
-//		DNASequence sequence3 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTAGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
-//		//fastML_sp_joint
-//		DNASequence sequence4 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTGGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
-//		//prank_free
-//		DNASequence sequence5 = new DNASequence("ATGTCCCATCTCTATATATATTCATTGACGG--CATTCTATTTTCTTGGT----ATTGAAATGAGCGTTTTTTATTATTACAATTGGTTTTGCAGACGGCACTTTCC--TTTCCTTTT---GTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCATATCTTAA");	
-//		//pranksp
-//		DNASequence sequence6 = new DNASequence("GAGGCTCCTGTCTATATATACCATTTGACATTCTATTCTATTCTACAACT----GTTAAAGTGAGTGGTTTTTATTGTAGAAGCTGGTTTTAAGGGTGGTATTTTTT--CTCCTTCCCTGGGTTTTGT------------ATATTTTATTGTTCTCCTATCTTAA");
-//		//prequel_sp
-//		DNASequence sequence7 = new DNASequence("GTGTTCCCTGTCTATATATATTCATTGACGGTATTTGTTTCTTTTGGTGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTCCAGACGGTATTTTAATTTTATTTTTAAGTCTTGTTCTTCTTGCCTTTTTTTCTTTGTTCTGGTATCTTAA");	
-//		
-//		
-//		List<DNASequence> lst = new ArrayList<DNASequence>();
-//		lst.add(sequence1);
-//		lst.add(sequence2);
-//		lst.add(sequence3);
-//		lst.add(sequence4);
-//		lst.add(sequence5);
-//		lst.add(sequence6);
-//		lst.add(sequence7);
-		
-		Profile<DNASequence, NucleotideCompound> results = Alignments.getMultipleSequenceAlignment(lst);
-		
-		aligned = results.getAlignedSequences();
-		
-		/*
-		for(AlignedSequence<DNASequence, NucleotideCompound> x : huuuuh)
-		{
-			System.out.println(x.toString());
 		}
-		*/
-		}
-		catch(Exception e){
+		catch(Exception e) {
 			e.printStackTrace();
 		}
-		return aligned;
+		
+		return psa;
+		
+//		List<AlignedSequence<DNASequence, NucleotideCompound>> aligned = null;
+//		try {
+//			//create a list of the DNASequences with the reconstructed sequences and the extant sequence
+//			List<DNASequence> lst = new ArrayList<DNASequence>();
+//			for(String x: recons){
+//				lst.add(new DNASequence(x));
+//			}
+//			lst.add(new DNASequence(extant));
+//			
+//			
+//			
+////		//ybr seqs for test
+////		//fastmlfreemarg
+////		DNASequence sequence1 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCAATTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTAGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
+////		//fastML_free_joint
+////		DNASequence sequence2 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTGGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
+////		//fastmlspmarg
+////		DNASequence sequence3 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTAGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
+////		//fastML_sp_joint
+////		DNASequence sequence4 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTGGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
+////		//prank_free
+////		DNASequence sequence5 = new DNASequence("ATGTCCCATCTCTATATATATTCATTGACGG--CATTCTATTTTCTTGGT----ATTGAAATGAGCGTTTTTTATTATTACAATTGGTTTTGCAGACGGCACTTTCC--TTTCCTTTT---GTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCATATCTTAA");	
+////		//pranksp
+////		DNASequence sequence6 = new DNASequence("GAGGCTCCTGTCTATATATACCATTTGACATTCTATTCTATTCTACAACT----GTTAAAGTGAGTGGTTTTTATTGTAGAAGCTGGTTTTAAGGGTGGTATTTTTT--CTCCTTCCCTGGGTTTTGT------------ATATTTTATTGTTCTCCTATCTTAA");
+////		//prequel_sp
+////		DNASequence sequence7 = new DNASequence("GTGTTCCCTGTCTATATATATTCATTGACGGTATTTGTTTCTTTTGGTGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTCCAGACGGTATTTTAATTTTATTTTTAAGTCTTGTTCTTCTTGCCTTTTTTTCTTTGTTCTGGTATCTTAA");	
+////		
+////		
+////		List<DNASequence> lst = new ArrayList<DNASequence>();
+////		lst.add(sequence1);
+////		lst.add(sequence2);
+////		lst.add(sequence3);
+////		lst.add(sequence4);
+////		lst.add(sequence5);
+////		lst.add(sequence6);
+////		lst.add(sequence7);
+//		
+//		Profile<DNASequence, NucleotideCompound> results = Alignments.getMultipleSequenceAlignment(lst);
+//		
+//		aligned = results.getAlignedSequences();
+//		
+//		/*
+//		for(AlignedSequence<DNASequence, NucleotideCompound> x : huuuuh)
+//		{
+//			System.out.println(x.toString());
+//		}
+//		*/
+//		}
+//		catch(Exception e){
+//			e.printStackTrace();
+//		}
+//		return aligned;
 	}
 		
 	
