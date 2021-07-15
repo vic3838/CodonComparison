@@ -25,11 +25,11 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
-		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
-		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
-		{
-			System.out.println(x.toString());
-		}
+//		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
+//		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
+//		{
+//			System.out.println(x.toString());
+//		}
 		
 		
 		//TODO: make the void methods getEmergingORFs and align return actual values that can be operated on in the main method, will need to loop
@@ -76,15 +76,30 @@ public class CodonComparison {
 		System.out.println(dir.getAbsolutePath());				//testing shit
 		
 		File [] emergingORFs = dir.listFiles(new MyFileNameFilter()); 	//get every item in this directory except for the git, bin, and src directories
+		String[] recons;
+		String extant;
 		//going through the emergingORFs, YAL, YBr, ...
 		for(File x : emergingORFs)
 		{		
+			String str = x.getAbsolutePath();
 			if(x.isDirectory())
 			{
-				//return an arraylist of the 8 reconstructed sequences and print it
-				getReconstructions(x.getAbsolutePath());
+				//return an array of the 8 reconstructed sequences and print it
+				recons = getReconstructions(str);
+				extant = str + str.substring(str.lastIndexOf("\\")) + "_ali.fa";//set extant to the path to the file containing the extant Scer sequence
+				extant = getExtantSequence(extant);				//redefine extant to the extant sequence itself
+				System.out.println("Extant seq: " + extant);
+				
 				System.out.println();
-				//System.out.println(x.toString());
+				
+				List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align(recons, extant);
+				for(AlignedSequence<DNASequence, NucleotideCompound> y : alignedSeqs)
+				{
+					System.out.println(y.toString());
+				}
+				System.out.println();
+
+				
 			}
 			
 		}
@@ -119,8 +134,12 @@ public class CodonComparison {
 			case 5: recons[i] = prank_sp(path + "\\" + reconDirs[3]); 
 					System.out.println("prank_sp: " + recons[i]); 
 					break;
-			case 6: recons[i] = prequel_free(path + "\\" + reconDirs[4]); 
-					System.out.println("prequel_free: " + recons[i]);
+			//TESTING PURPOSES ONLY: REVERT TO NORMAL AFTER TESTING, SHOULD BE PREQUEL FREE
+			case 6: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
+					System.out.println("prequel_sp: " + recons[i]); 
+					
+					//recons[i] = prequel_free(path + "\\" + reconDirs[4]); 
+					//System.out.println("prequel_free: " + recons[i]);
 					break;
 			case 7: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
 					System.out.println("prequel_sp: " + recons[i]); 
@@ -138,6 +157,30 @@ public class CodonComparison {
 		
 		return recons;
 		
+	}
+	
+	//
+	public static String getExtantSequence(String path) throws IOException
+	{
+		Scanner fileScan = new Scanner(new FileInputStream(path));
+		String fileLine = "";
+		String seq = "";
+		
+		boolean foundSeq = false;
+		while(fileScan.hasNextLine()){
+			fileLine = fileScan.nextLine();		
+			if(fileLine.charAt(0) == '>' && foundSeq) {
+				break;
+			}
+			if(fileLine.equals(">Scer")){
+				foundSeq = true;
+			}
+			if(fileLine.charAt(0) != '>' && foundSeq) {
+				fileLine = fileLine.toUpperCase();
+				seq += fileLine;
+			}			
+		}
+		return seq;		
 	}
 
 	//helper methods
@@ -330,35 +373,44 @@ public class CodonComparison {
 	}
 	
 	//this method will lead the alignments of the whatever sequences we give it
-	public static List<AlignedSequence<DNASequence, NucleotideCompound>> align() 
+	public static List<AlignedSequence<DNASequence, NucleotideCompound>> align(String[] recons, String extant) 
 	{
 		List<AlignedSequence<DNASequence, NucleotideCompound>> aligned = null;
 		try {
-		//ybr seqs for test
-		//fastmlfreemarg
-		DNASequence sequence1 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCAATTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTAGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
-		//fastML_free_joint
-		DNASequence sequence2 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTGGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
-		//fastmlspmarg
-		DNASequence sequence3 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTAGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
-		//fastML_sp_joint
-		DNASequence sequence4 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTGGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
-		//prank_free
-		DNASequence sequence5 = new DNASequence("ATGTCCCATCTCTATATATATTCATTGACGG--CATTCTATTTTCTTGGT----ATTGAAATGAGCGTTTTTTATTATTACAATTGGTTTTGCAGACGGCACTTTCC--TTTCCTTTT---GTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCATATCTTAA");	
-		//pranksp
-		DNASequence sequence6 = new DNASequence("GAGGCTCCTGTCTATATATACCATTTGACATTCTATTCTATTCTACAACT----GTTAAAGTGAGTGGTTTTTATTGTAGAAGCTGGTTTTAAGGGTGGTATTTTTT--CTCCTTCCCTGGGTTTTGT------------ATATTTTATTGTTCTCCTATCTTAA");
-		//prequel_sp
-		DNASequence sequence7 = new DNASequence("GTGTTCCCTGTCTATATATATTCATTGACGGTATTTGTTTCTTTTGGTGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTCCAGACGGTATTTTAATTTTATTTTTAAGTCTTGTTCTTCTTGCCTTTTTTTCTTTGTTCTGGTATCTTAA");	
-		
-		
-		List<DNASequence> lst = new ArrayList<DNASequence>();
-		lst.add(sequence1);
-		lst.add(sequence2);
-		lst.add(sequence3);
-		lst.add(sequence4);
-		lst.add(sequence5);
-		lst.add(sequence6);
-		lst.add(sequence7);
+			//create a list of the DNASequences with the reconstructed sequences and the extant sequence
+			List<DNASequence> lst = new ArrayList<DNASequence>();
+			for(String x: recons){
+				lst.add(new DNASequence(x));
+			}
+			lst.add(new DNASequence(extant));
+			
+			
+			
+//		//ybr seqs for test
+//		//fastmlfreemarg
+//		DNASequence sequence1 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCAATTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTAGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
+//		//fastML_free_joint
+//		DNASequence sequence2 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCCATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTGCAGACGGTATTTTTCAATTCCTTTTTTGGGTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCGTATCTTAA");
+//		//fastmlspmarg
+//		DNASequence sequence3 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTAGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
+//		//fastML_sp_joint
+//		DNASequence sequence4 = new DNASequence("GTGTCCCCTGTCTATATATATCCATTGACGGTCTATTCTATTCTCTTGGTACATGTTGAAGTGAGCGTTTTTTATTATTGCACTCGGTTTTGCAGACGGTATTTTTTAATTCCTTTTTTGGGTTTTGTTTCGTCTTTCCTTTTTTTTATTGTTTTCGTATCTTAA");
+//		//prank_free
+//		DNASequence sequence5 = new DNASequence("ATGTCCCATCTCTATATATATTCATTGACGG--CATTCTATTTTCTTGGT----ATTGAAATGAGCGTTTTTTATTATTACAATTGGTTTTGCAGACGGCACTTTCC--TTTCCTTTT---GTTTTGTTTCTTCTTTCCTTTTTTTTATTGTTCTCATATCTTAA");	
+//		//pranksp
+//		DNASequence sequence6 = new DNASequence("GAGGCTCCTGTCTATATATACCATTTGACATTCTATTCTATTCTACAACT----GTTAAAGTGAGTGGTTTTTATTGTAGAAGCTGGTTTTAAGGGTGGTATTTTTT--CTCCTTCCCTGGGTTTTGT------------ATATTTTATTGTTCTCCTATCTTAA");
+//		//prequel_sp
+//		DNASequence sequence7 = new DNASequence("GTGTTCCCTGTCTATATATATTCATTGACGGTATTTGTTTCTTTTGGTGTTGAAGTGAGCGTTTTTTATTATTGCACTTGGTTTTCCAGACGGTATTTTAATTTTATTTTTAAGTCTTGTTCTTCTTGCCTTTTTTTCTTTGTTCTGGTATCTTAA");	
+//		
+//		
+//		List<DNASequence> lst = new ArrayList<DNASequence>();
+//		lst.add(sequence1);
+//		lst.add(sequence2);
+//		lst.add(sequence3);
+//		lst.add(sequence4);
+//		lst.add(sequence5);
+//		lst.add(sequence6);
+//		lst.add(sequence7);
 		
 		Profile<DNASequence, NucleotideCompound> results = Alignments.getMultipleSequenceAlignment(lst);
 		
