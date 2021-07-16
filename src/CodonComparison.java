@@ -45,7 +45,7 @@ public class CodonComparison {
 	}
 	
 	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
-	public static int numberOfAlignedCodons(String recon, String extant)
+	public static int[] numberOfAlignedCodons(String recon, String extant)
 	{
 		//since the strings are aligned, we can read codon by codon. worry about finding an ORF later
 		StringBuilder rec = new StringBuilder(recon);
@@ -56,18 +56,20 @@ public class CodonComparison {
 		String codon1 = null;
 		String codon2 = null;
 		for(int i = 0; i < length; i += 3) {
-			codon1 = rec.substring(i, i+3);
-			codon2 = ext.substring(i, i+ 3);
 			
-			if(codon1.equals(codon2)) {
-				alignedCodons++;
+			if(i + 3 <= length) {
+				codon1 = rec.substring(i, i + 3);
+				codon2 = ext.substring(i, i + 3);
+				
+				if(codon1.equals(codon2)) {
+					alignedCodons++;
+				}
+				
+				codons++;
 			}
-			
-			codons++;
 		}
-		
 		if(codons != length/3) System.out.println("ERROR");	
-		return alignedCodons;
+		return new int[] {alignedCodons, codons};
 	}
 	
 	
@@ -83,6 +85,7 @@ public class CodonComparison {
 		String extant;													//holder for the extant seq
 		AlignedSequence<DNASequence, NucleotideCompound> rec;			//holders for the aligned seqs
 		AlignedSequence<DNASequence, NucleotideCompound> ext;
+		int[] results;
 		//going through the emergingORFs, YAL, YBr, ...
 		for(File x : emergingORFs)
 		{		
@@ -91,8 +94,8 @@ public class CodonComparison {
 			{
 				//return an array of the 8 reconstructed sequences and print it
 				recons = getReconstructions(str);
-				extant = str + str.substring(str.lastIndexOf("\\")) + "_ali.fa";//set extant to the path to the file containing the extant Scer sequence
-				extant = getExtantSequence(extant);				//redefine extant to the extant sequence itself
+				extant = str + str.substring(str.lastIndexOf("\\")) + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
+				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
 				System.out.println("Extant seq: " + extant);
 				
 				System.out.println();
@@ -105,7 +108,11 @@ public class CodonComparison {
 					recon = rec.toString();						//string representation of the reconstruction alignment
 					extant = ext.toString();					//string representation of the extant alignment
 					
-					
+					results = numberOfAlignedCodons(recon, extant);
+					System.out.println(recon);
+					System.out.println(extant);
+					System.out.println(results[0] + "/" + results[1]);
+					System.out.println();
 					
 				}
 				
@@ -404,8 +411,8 @@ public class CodonComparison {
 	{
 		SequencePair<DNASequence, NucleotideCompound> psa = null;
 		try {
-			DNASequence rec = new DNASequence("AATTGAAGAATGTGCATAAATTTATATATGTTTGTTGTTCTGGCTTTTTATAAGGGACATGAGGAGAAGTGTCTTTGTTAGATGCATGAGTTATCTCAATTTGTTTCTGATCTTAGAAGCTATTCTATGCCCAGTCGACTCCTTGATTTCGATCCCAAATGGCATCATAGTAGTTTCTGAGCTAGTATCACCATTTTCCAATTCTAATCCATCCCGAAGACTTTTTCTAAAGGTGAAGCCTTCTTCTTGTCTTAATGTGTTGTATCTGGACTTATGTTGTAATGGCTTAATCATTGCTGATGCAGGAATTGGGGGATAG");
-			DNASequence ext = new DNASequence("--ATGAAGGATATGAATAGTATTAGATA----TGTA-TTCTTTTTTTTTTCCAGGGACATAAAGAGTTGT--TTTTATAAGGTGCG-GAGTTATCTCAATTTGCTTCTGATTTTAGAAGCTATTCTATGCCCGGTCGACTCTTTGATTTCGATCCCAAACGGCATCATGGTAGTTTCGGAGCCAGATTCGCCATTTTCCCACTCTAATCCATCTCGAAGACTTTTTCGAAAGGTAAACCCTTCTTCTTGTCTCAGCGTGTTATATTTGGACTTATGCTGTAGCGGCTTGATCATTGCCGAAGCAGGTATTGGCGGATAA");
+			DNASequence rec = new DNASequence(recons);
+			DNASequence ext = new DNASequence(extant);
 				
 			SubstitutionMatrix<NucleotideCompound> matrix = SubstitutionMatrixHelper.getNuc4_4();
 			
@@ -415,7 +422,7 @@ public class CodonComparison {
 			
 			psa = Alignments.getPairwiseAlignment(rec, ext, PairwiseSequenceAlignerType.GLOBAL, gapP, matrix);
 			
-			System.out.println(psa);
+			//System.out.println(psa);
 			
 			
 		}
