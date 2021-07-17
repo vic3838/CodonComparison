@@ -1,0 +1,10 @@
+\YBR196C-A aligned codons
+____________________
+  FastML_free_marg | 29/56 
+ FastML_free_joint | 28/56 
+    FastML_sp_marg | 27/56 
+   FastML_sp_joint | 27/56 
+        prank_free | 37/56 
+          prank_sp | 23/60 
+      prequel_free | 28/61 
+        prequel_sp | 28/61 

@@ -1,0 +1,10 @@
+\YAR019W-A aligned codons
+____________________
+  FastML_free_marg | 70/115 
+ FastML_free_joint | 70/115 
+    FastML_sp_marg | 64/115 
+   FastML_sp_joint | 65/115 
+        prank_free | 53/116 
+          prank_sp | 49/118 
+      prequel_free | 51/120 
+        prequel_sp | 51/120 

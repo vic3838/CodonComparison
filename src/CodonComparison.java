@@ -113,15 +113,46 @@ public class CodonComparison {
 				
 				//pairwise alignment of each reconstruction with the extant sequence
 				for(String y: recons) {
-					SequencePair<DNASequence, NucleotideCompound> alignment = align(y, extant);	//align the sequences
-					rec = alignment.getQuery();
-					ext = alignment.getTarget();
-					recon = rec.toString();						//string representation of the reconstruction alignment
-					extant = ext.toString();					//string representation of the extant alignment
+					//get the longest ORF/coding sequence from the reconstruction
+					//find all the start indices in the reconstruction
+					ArrayList<Integer> startIndices = findAllStart(y);
+					//run findCodingSequence on all these start codons
+					ArrayList<String> codingSequences = new ArrayList<String>();
+					//run through the indexes of the start codons, find the ORF corresponding to it
+					for(int j = 0; j < startIndices.size(); j++)
+					{
+						recon = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
+						codingSequences.add(recon);
+					}					
+					//now, codingSequences should be full of the potential coding sequences
+					//just select the longest of them and use that as our coding sequence
+					Collections.sort(codingSequences, Comparator.comparing(String :: length));
+					//use recon again to get the largest coding sequence from the reconstruction and use that in our alignment
 					
-					results = numberOfAlignedCodons(recon, extant);
-					outTable(writer, results, count);
-					count++;
+					//if we find a coding sequence, we can proceed with the alignment
+					if(codingSequences.size() != 0) {
+						recon = codingSequences.get(codingSequences.size() - 1);	
+						SequencePair<DNASequence, NucleotideCompound> alignment = align(recon, extant);	//align the sequences
+						rec = alignment.getQuery();
+						ext = alignment.getTarget();
+						recon = rec.toString();						//string representation of the reconstruction alignment
+						extant = ext.toString();					//string representation of the extant alignment
+						results = numberOfAlignedCodons(recon, extant);
+						outTable(writer, results, count);
+						count++;
+					}
+					//if we do not find a coding sequence, we must output N/A to the table
+					else {
+						recon = "NA";
+						results = new int[] {-1,-1};
+						outTable(writer, results, count);
+						count++;
+					}
+					
+					
+					
+					
+
 					
 					
 //					System.out.println(recon);
@@ -546,8 +577,13 @@ public class CodonComparison {
 	{
 		//can take in an int array with every 2 steps corresponding to a new aligned/total codon fraction
 		String[] ASRtools = new String[] {"FastML_free_marg", "FastML_free_joint", "FastML_sp_marg", "FastML_sp_joint", "prank_free", "prank_sp", "prequel_free", "prequel_sp"};	
-		writer.printf("%18s | %d/%d \n", ASRtools[tool], scores[0], scores[1]);			
-		
+		//if we did not find an ORF
+		if(scores[0] == -1 && scores[1] == -1) {
+			writer.printf("%18s | N/A \n", ASRtools[tool]);
+		}
+		else {
+			writer.printf("%18s | %d/%d \n", ASRtools[tool], scores[0], scores[1]);			
+		}
 //		writer.println(locus + " aligned codons");
 //		writer.println("____________________");
 //		
@@ -564,7 +600,60 @@ public class CodonComparison {
 		
 	}
 	
+	public static String findORF(String seq, int startIndex)
+	{
+		int stopIndex = -1;
+		String codon;
+		//cycle through the string starting from the startIndex
+		for(int i = startIndex; i < seq.length(); i+=3){
+			if(i + 3 >= seq.length())
+			{
+				codon = seq.substring(i, seq.length());
+			}
+			else
+			{
+				codon = seq.substring(i, i+3);
+			}
+			if(isStop(codon))
+			{
+				stopIndex = i + 3;
+				break;
+			}
+		}
+		if(stopIndex == -1)
+		{
+			return "BAD";
+		}
+		else{
+			return seq.substring(startIndex, stopIndex);
+		}
+	}
 	
+	public static ArrayList<Integer> findAllStart(String ORF)
+	{
+		//System.out.println("seq size: " + ORF.length());
+        ArrayList<Integer> indexes = new ArrayList<Integer>();
+        int index = 0;
+        while(index != -1){
+            index = ORF.indexOf(START, index + 3);
+            if (index != -1) {
+                indexes.add(index);
+            }
+        }
+		/*TESTING
+		System.out.println("Indexes array list size: " + indexes.size());
+		System.out.println("seq size: " + ORF.length());
+		for(int i = 0; i < indexes.size(); i++)
+		{
+			int j = indexes.get(i);
+
+			System.out.println(j);
+			System.out.println(ORF.substring(j,j+3));
+			
+		}
+		*/
+        return indexes;
+	}
 	
 	//method to check if a codon is a stop codon
 	public static boolean isStop(String codon)
