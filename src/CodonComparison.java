@@ -129,37 +129,46 @@ public class CodonComparison {
 					Collections.sort(codingSequences, Comparator.comparing(String :: length));
 					//use recon again to get the largest coding sequence from the reconstruction and use that in our alignment
 					
-					//if we find a coding sequence, we can proceed with the alignment
+					
+					//if the table has an entry, we probably found a coding seq, but it could be "BAD"
 					if(codingSequences.size() != 0) {
 						recon = codingSequences.get(codingSequences.size() - 1);	
-						SequencePair<DNASequence, NucleotideCompound> alignment = align(recon, extant);	//align the sequences
-						rec = alignment.getQuery();
-						ext = alignment.getTarget();
-						recon = rec.toString();						//string representation of the reconstruction alignment
-						extant = ext.toString();					//string representation of the extant alignment
-						results = numberOfAlignedCodons(recon, extant);
-						outTable(writer, results, count);
-						count++;
+						//"BAD" means no coding sequence was found
+						if(recon.equals("BAD")) {
+							recon = "NA";
+							results = new int[] {-1,-1};
+							outTable(writer, results, count);
+							count++;
+						}
+						//otherwise, we can proceed with the alignment
+						else { 
+							SequencePair<DNASequence, NucleotideCompound> alignment = align(recon, extant);	//align the sequences
+							rec = alignment.getQuery();
+							ext = alignment.getTarget();
+							recon = rec.toString();						//string representation of the reconstruction alignment
+							extant = ext.toString();					//string representation of the extant alignment
+							results = numberOfAlignedCodons(recon, extant);
+							outTable(writer, results, count);
+							count++;
+						}
+
 					}
-					//if we do not find a coding sequence, we must output N/A to the table
+					//if the table is empty, no ORF was found
 					else {
 						recon = "NA";
 						results = new int[] {-1,-1};
 						outTable(writer, results, count);
 						count++;
 					}
-					
-					
-					
-					
 
+
+		
 					
+					System.out.println(recon);
+					System.out.println(extant);
+					System.out.println(results[0] + "/" + results[1]);
+					System.out.println();
 					
-//					System.out.println(recon);
-//					System.out.println(extant);
-//					System.out.println(results[0] + "/" + results[1]);
-//					System.out.println();
-//					
 				}
 				
 				
@@ -654,6 +663,7 @@ public class CodonComparison {
 		*/
         return indexes;
 	}
+	
 	
 	//method to check if a codon is a stop codon
 	public static boolean isStop(String codon)
