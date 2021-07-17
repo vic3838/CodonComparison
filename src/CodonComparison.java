@@ -86,18 +86,29 @@ public class CodonComparison {
 		AlignedSequence<DNASequence, NucleotideCompound> rec;			//holders for the aligned seqs
 		AlignedSequence<DNASequence, NucleotideCompound> ext;
 		int[] results;
+		int count;
+		String locus;													 //string that holds the ORF name (YBR, YAL, etc))
 		//going through the emergingORFs, YAL, YBr, ...
 		for(File x : emergingORFs)
 		{		
-			String str = x.getAbsolutePath();
+			String str = x.getAbsolutePath();				//path to the ORF folder
 			if(x.isDirectory())
-			{
+			{				
+				count = 0;				//count will be the number passed into outTable(), corresponds to the method being printed
 				//return an array of the 8 reconstructed sequences and print it
 				recons = getReconstructions(str);
-				extant = str + str.substring(str.lastIndexOf("\\")) + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
+				locus = str.substring(str.lastIndexOf("\\"));
+				extant = str + locus + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
 				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
 				System.out.println("Extant seq: " + extant);
 				
+				//output table file
+				File newFile = new File(str + "\\" + locus + "_alignedCodons.txt");
+				FileWriter fwrite = new FileWriter(newFile);
+				PrintWriter writer = new PrintWriter(fwrite);
+				//set up the file
+				writer.println(locus + " aligned codons");
+				writer.println("____________________");
 				System.out.println();
 				
 				//pairwise alignment of each reconstruction with the extant sequence
@@ -109,11 +120,15 @@ public class CodonComparison {
 					extant = ext.toString();					//string representation of the extant alignment
 					
 					results = numberOfAlignedCodons(recon, extant);
-					System.out.println(recon);
-					System.out.println(extant);
-					System.out.println(results[0] + "/" + results[1]);
-					System.out.println();
+					outTable(writer, results, count);
+					count++;
 					
+					
+//					System.out.println(recon);
+//					System.out.println(extant);
+//					System.out.println(results[0] + "/" + results[1]);
+//					System.out.println();
+//					
 				}
 				
 				
@@ -133,7 +148,7 @@ public class CodonComparison {
 //				
 //				System.out.println();
 
-				
+				writer.close();
 			}
 			
 		}
@@ -525,7 +540,32 @@ public class CodonComparison {
 		}
 
 	}
-
+	
+	//make a table with the reconstruction, the ORF, and the scores 
+	public static void outTable(PrintWriter writer, int[] scores, int tool) throws IOException
+	{
+		//can take in an int array with every 2 steps corresponding to a new aligned/total codon fraction
+		String[] ASRtools = new String[] {"FastML_free_marg", "FastML_free_joint", "FastML_sp_marg", "FastML_sp_joint", "prank_free", "prank_sp", "prequel_free", "prequel_sp"};	
+		writer.printf("%18s | %d/%d \n", ASRtools[tool], scores[0], scores[1]);			
+		
+//		writer.println(locus + " aligned codons");
+//		writer.println("____________________");
+//		
+//		//move through the array 
+//		for(int i = 0; i < scores.length; i += 2)
+//		{
+//			
+//			writer.format("%18s | %d/%d ",ASRtools[count], scores[i], scores[i+1]);		
+//			count++;
+//		}
+		
+		
+		//writer.close();
+		
+	}
+	
+	
+	
 	//method to check if a codon is a stop codon
 	public static boolean isStop(String codon)
 	{
