@@ -103,7 +103,7 @@ public class CodonComparison {
 				System.out.println("Extant seq: " + extant);
 				
 				//output table file
-				File newFile = new File(str + "\\" + locus + "_alignedCodons.txt");
+				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
 				FileWriter fwrite = new FileWriter(newFile);
 				PrintWriter writer = new PrintWriter(fwrite);
 				//set up the file
