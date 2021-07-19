@@ -16,7 +16,6 @@ import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
 import org.biojava.nbio.core.util.ConcurrencyTools;
 
 //@Author Vijay Kiran Cherupally
-//god please help me
 public class CodonComparison {
 	
 	static final String START = "ATG";
@@ -38,10 +37,6 @@ public class CodonComparison {
 		//TODO: make the void methods getEmergingORFs and align return actual values that can be operated on in the main method, will need to loop
 		//		might have to call align() from getEmergingORFs()
 		//now that i have the aligned sequences, the next basic step is to get the # of aligned codons and output them to a table
-		
-		
-		
-		
 	}
 	
 	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
@@ -82,18 +77,22 @@ public class CodonComparison {
 		File [] emergingORFs = dir.listFiles(new MyFileNameFilter()); 	//get every item in this directory except for the git, bin, and src directories
 		String[] recons;
 		String recon;													//holder for the recon
+		String ORF;
 		String extant;													//holder for the extant seq
 		AlignedSequence<DNASequence, NucleotideCompound> rec;			//holders for the aligned seqs
 		AlignedSequence<DNASequence, NucleotideCompound> ext;
+		SequencePair<DNASequence, NucleotideCompound> alignment;		//holder for the alignment
 		int[] results;
 		int count;
+		int rawCount; 			//count used for printing to the raw reconstruction alignemnt output
 		String locus;													 //string that holds the ORF name (YBR, YAL, etc))
 		//going through the emergingORFs, YAL, YBr, ...
 		for(File x : emergingORFs)
 		{		
 			String str = x.getAbsolutePath();				//path to the ORF folder
 			if(x.isDirectory())
-			{				
+			{	
+				rawCount = 0;
 				count = 0;				//count will be the number passed into outTable(), corresponds to the method being printed
 				//return an array of the 8 reconstructed sequences and print it
 				recons = getReconstructions(str);
@@ -102,14 +101,22 @@ public class CodonComparison {
 				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
 				System.out.println("Extant seq: " + extant);
 				
-				//output table file
+				//output table file for ORF alignment
 				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
 				FileWriter fwrite = new FileWriter(newFile);
 				PrintWriter writer = new PrintWriter(fwrite);
-				//set up the file
+				
+				//output table file for the raw alignment
+				File rawFile = new File(str + "\\" + locus + "_alignedCodonsByRawReconstruction.txt");
+				FileWriter wwrite = new FileWriter(rawFile);
+				PrintWriter rawWriter = new PrintWriter(wwrite);
+				
+				//set up the files
 				writer.println(locus + " aligned codons");
 				writer.println("____________________");
-				System.out.println();
+					
+				rawWriter.println(locus + " aligned codons");
+				rawWriter.println("____________________");
 				
 				//pairwise alignment of each reconstruction with the extant sequence
 				for(String y: recons) {
@@ -121,8 +128,8 @@ public class CodonComparison {
 					//run through the indexes of the start codons, find the ORF corresponding to it
 					for(int j = 0; j < startIndices.size(); j++)
 					{
-						recon = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
-						codingSequences.add(recon);
+						ORF = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
+						codingSequences.add(ORF);
 					}					
 					//now, codingSequences should be full of the potential coding sequences
 					//just select the longest of them and use that as our coding sequence
@@ -132,22 +139,22 @@ public class CodonComparison {
 					
 					//if the table has an entry, we probably found a coding seq, but it could be "BAD"
 					if(codingSequences.size() != 0) {
-						recon = codingSequences.get(codingSequences.size() - 1);	
+						ORF = codingSequences.get(codingSequences.size() - 1);	
 						//"BAD" means no coding sequence was found
-						if(recon.equals("BAD")) {
-							recon = "NA";
+						if(ORF.equals("BAD")) {
+							ORF = "NA";
 							results = new int[] {-1,-1};
 							outTable(writer, results, count);
 							count++;
 						}
 						//otherwise, we can proceed with the alignment
 						else { 
-							SequencePair<DNASequence, NucleotideCompound> alignment = align(recon, extant);	//align the sequences
+							alignment = align(ORF, extant);	//align the sequences
 							rec = alignment.getQuery();
 							ext = alignment.getTarget();
-							recon = rec.toString();						//string representation of the reconstruction alignment
+							ORF = rec.toString();						//string representation of the ORF from reconstruction alignment
 							extant = ext.toString();					//string representation of the extant alignment
-							results = numberOfAlignedCodons(recon, extant);
+							results = numberOfAlignedCodons(ORF, extant);
 							outTable(writer, results, count);
 							count++;
 						}
@@ -155,20 +162,30 @@ public class CodonComparison {
 					}
 					//if the table is empty, no ORF was found
 					else {
-						recon = "NA";
+						ORF = "NA";
 						results = new int[] {-1,-1};
 						outTable(writer, results, count);
 						count++;
 					}
-
+					
+					//now we do the alignment of the raw reconstructions and output to the other file, can reuse objects 
+					alignment = align(y, extant);				//align the sequences
+					rec = alignment.getQuery();
+					ext = alignment.getTarget();
+					recon = rec.toString();						//string representation of the reconstruction alignment
+					extant = ext.toString();					//string representation of the extant alignment
+					
+					results = numberOfAlignedCodons(recon, extant);
+					outTable(rawWriter, results, rawCount);
+					rawCount++;
 
 		
 					
-					System.out.println(recon);
-					System.out.println(extant);
-					System.out.println(results[0] + "/" + results[1]);
-					System.out.println();
-					
+//					System.out.println(ORF);
+//					System.out.println(extant);
+//					System.out.println(results[0] + "/" + results[1]);
+//					System.out.println();
+//					
 				}
 				
 				
