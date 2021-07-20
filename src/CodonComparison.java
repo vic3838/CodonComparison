@@ -100,7 +100,6 @@ public class CodonComparison {
 				extant = str + locus + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
 				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
 				System.out.println("Extant seq: " + extant);
-				System.out.println();
 				
 				//output table file for ORF alignment
 				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
@@ -207,7 +206,6 @@ public class CodonComparison {
 //				System.out.println();
 
 				writer.close();
-				rawWriter.close();
 			}
 			
 		}
