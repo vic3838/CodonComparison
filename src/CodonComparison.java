@@ -220,8 +220,8 @@ public class CodonComparison {
 		System.out.println(path);
 		File dir = new File(path);
 		String [] reconDirs = dir.list(new MyDirectoryFilter());			//filters out any files that have extensions, leaving only directories
-		String [] recons = new String[8];
-		for(int i = 0; i < 8; i++)
+		String [] recons = new String[7];
+		for(int i = 0; i < 7; i++)
 		{
 			switch(i) {
 			case 0: recons[i] = fastML_free_marg(path + "\\" + reconDirs[0]); 
@@ -242,14 +242,7 @@ public class CodonComparison {
 			case 5: recons[i] = prank_sp(path + "\\" + reconDirs[3]); 
 					System.out.println("prank_sp: " + recons[i]); 
 					break;
-			//TESTING PURPOSES ONLY: REVERT TO NORMAL AFTER TESTING, SHOULD BE PREQUEL FREE
 			case 6: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
-					System.out.println("prequel_sp: " + recons[i]); 
-					
-					//recons[i] = prequel_free(path + "\\" + reconDirs[4]); 
-					//System.out.println("prequel_free: " + recons[i]);
-					break;
-			case 7: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
 					System.out.println("prequel_sp: " + recons[i]); 
 					break;
 			default: System.out.println("ERROR");
@@ -604,7 +597,7 @@ public class CodonComparison {
 	public static void outTable(PrintWriter writer, int[] scores, int tool) throws IOException
 	{
 		//can take in an int array with every 2 steps corresponding to a new aligned/total codon fraction
-		String[] ASRtools = new String[] {"FastML_free_marg", "FastML_free_joint", "FastML_sp_marg", "FastML_sp_joint", "prank_free", "prank_sp", "prequel_free", "prequel_sp"};	
+		String[] ASRtools = new String[] {"FastML_free_marg", "FastML_free_joint", "FastML_sp_marg", "FastML_sp_joint", "prank_free", "prank_sp", "prequel_sp"};	
 		//if we did not find an ORF
 		if(scores[0] == -1 && scores[1] == -1) {
 			writer.printf("%s\tN/A\n", ASRtools[tool]);
