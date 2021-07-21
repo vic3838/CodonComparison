@@ -27,6 +27,7 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
+		organizeFiles.main(new String[0]);		//put all the files into the directory for R to visualize
 //		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
 //		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
 //		{
@@ -112,11 +113,11 @@ public class CodonComparison {
 				PrintWriter rawWriter = new PrintWriter(wwrite);
 				
 				//set up the files
-				writer.println(locus + " aligned codons");
-				writer.println("____________________");
+				writer.println("tool\taligned_codons");
+				//writer.println("____________________");
 					
-				rawWriter.println(locus + " aligned codons");
-				rawWriter.println("____________________");
+				rawWriter.println("tool\taligned_codons");
+				//rawWriter.println("____________________");
 				
 				//pairwise alignment of each reconstruction with the extant sequence
 				for(String y: recons) {
@@ -206,6 +207,7 @@ public class CodonComparison {
 //				System.out.println();
 
 				writer.close();
+				rawWriter.close();
 			}
 			
 		}
@@ -605,10 +607,10 @@ public class CodonComparison {
 		String[] ASRtools = new String[] {"FastML_free_marg", "FastML_free_joint", "FastML_sp_marg", "FastML_sp_joint", "prank_free", "prank_sp", "prequel_free", "prequel_sp"};	
 		//if we did not find an ORF
 		if(scores[0] == -1 && scores[1] == -1) {
-			writer.printf("%18s | N/A \n", ASRtools[tool]);
+			writer.printf("%s\tN/A\n", ASRtools[tool]);
 		}
 		else {
-			writer.printf("%18s | %d/%d \n", ASRtools[tool], scores[0], scores[1]);			
+			writer.printf("%s\t%d/%d\n", ASRtools[tool], scores[0], scores[1]);			
 		}
 //		writer.println(locus + " aligned codons");
 //		writer.println("____________________");
