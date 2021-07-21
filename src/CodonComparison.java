@@ -43,29 +43,89 @@ public class CodonComparison {
 	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
 	public static int[] numberOfAlignedCodons(String recon, String extant)
 	{
-		//since the strings are aligned, we can read codon by codon. worry about finding an ORF later
-		StringBuilder rec = new StringBuilder(recon);
-		StringBuilder ext = new StringBuilder(extant);
-		int codons = 0;
-		int alignedCodons = 0;
+		StringBuilder rec = new StringBuilder(recon);				//using stringbuilder to save on costs
+		StringBuilder ext = new StringBuilder(extant);		
+		StringBuilder recRFC = new StringBuilder();
+		StringBuilder extRFC = new StringBuilder();		
+		int nucCount = 0;
+		int alignedCount = 0;
 		int length = recon.length();
-		String codon1 = null;
-		String codon2 = null;
-		for(int i = 0; i < length; i += 3) {
-			
-			if(i + 3 <= length) {
-				codon1 = rec.substring(i, i + 3);
-				codon2 = ext.substring(i, i + 3);
-				
-				if(codon1.equals(codon2)) {
-					alignedCodons++;
-				}
-				
-				codons++;
+		//appending 1,2,3
+		int[] RFCArr = new int[] {1,2,3};
+		int recCount = 0;
+		int extCount = 0;
+		//now we cycle through the strings, assigning 0,1,2,3 to the RFC strings
+		for(int i = 0; i < length; i++) {
+			//assigning numbers to the reconstruction
+			if(rec.charAt(i) == '-') {
+				recRFC.append(0);
 			}
+			else {
+				recRFC.append(RFCArr[recCount]);	//add 1, 2, or 3
+				recCount = nextDigit(recCount);		//get the next number ready
+			}
+			
+			//assigning numbers to the extant
+			if(ext.charAt(i) == '-') {
+				extRFC.append(0);
+			}
+			else {
+				extRFC.append(RFCArr[extCount]);	//add 1, 2, or 3
+				extCount = nextDigit(extCount);		//get the next number ready
+			}
+			
+			//compare the 2 values at the end of the strings, incrementing score only if the numbers match and they aren't 0
+			if( (recRFC.charAt(i) == (extRFC.charAt(i))) && recRFC.charAt(i) != '0' && (extRFC.charAt(i) != '0')) {
+				alignedCount++;
+			}
+			nucCount++;
 		}
-		if(codons != length/3) System.out.println("ERROR");	
-		return new int[] {alignedCodons, codons};
+//		System.out.println();
+//		System.out.println(rec);
+//		System.out.println(ext);
+//		System.out.println("Length: " + length);
+//		System.out.println(recRFC);
+//		System.out.println(extRFC);
+//		System.out.println("Method output: " + alignedCount + "/" + nucCount);
+//		int num = 0;
+//		int denom = 0;
+//		for(int i = 0; i < recRFC.length(); i++) {
+//			char x = recRFC.charAt(i);
+//			char y = extRFC.charAt(i);
+//			
+//			if(x == y && x != '0' && y != '0') {
+//				num++;
+//			}
+//			denom++;
+//			
+//		}
+//		System.out.println("Testing Output: " + num + "/" + denom);
+//		System.out.println();	
+		return new int[] {alignedCount, nucCount};
+			
+//		//since the strings are aligned, we can read codon by codon. worry about finding an ORF later
+//		StringBuilder rec = new StringBuilder(recon);
+//		StringBuilder ext = new StringBuilder(extant);
+//		int codons = 0;
+//		int alignedCodons = 0;
+//		int length = recon.length();
+//		String codon1 = null;
+//		String codon2 = null;
+//		for(int i = 0; i < length; i += 3) {
+//			
+//			if(i + 3 <= length) {
+//				codon1 = rec.substring(i, i + 3);
+//				codon2 = ext.substring(i, i + 3);
+//				
+//				if(codon1.equals(codon2)) {
+//					alignedCodons++;
+//				}
+//				
+//				codons++;
+//			}
+//		}
+//		if(codons != length/3) System.out.println("ERROR");	
+//		return new int[] {alignedCodons, codons};
 	}
 	
 	
@@ -73,7 +133,7 @@ public class CodonComparison {
 	{
 		String path = "D:\\College\\TECBio\\CodonComparison";	//create a string with the path of the current directory, will be used and edited
 		File dir = new File(path);								//creating the file of the current directory
-		System.out.println(dir.getAbsolutePath());				//testing shit
+		System.out.println(dir.getAbsolutePath());				//testing
 		
 		File [] emergingORFs = dir.listFiles(new MyFileNameFilter()); 	//get every item in this directory except for the git, bin, and src directories
 		String[] recons;
@@ -676,7 +736,15 @@ public class CodonComparison {
         return indexes;
 	}
 	
-	
+	public static int nextDigit(int x) 
+	{
+		int ret = -1;
+		if(x == 0) ret = 1;
+		if(x == 1) ret = 2;
+		if(x == 2) ret = 0;
+		
+		return ret;
+	}
 	//method to check if a codon is a stop codon
 	public static boolean isStop(String codon)
 	{
