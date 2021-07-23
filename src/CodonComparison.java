@@ -12,7 +12,7 @@ import org.biojava.nbio.core.alignment.template.AlignedSequence;
 import org.biojava.nbio.core.sequence.DNASequence; 
 import org.biojava.nbio.core.sequence.MultipleSequenceAlignment;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound; 
-import org.biojava.nbio.core.sequence.io.FastaReaderHelper; 
+import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
 import org.biojava.nbio.core.util.ConcurrencyTools;
 
 //@Author Vijay Kiran Cherupally
@@ -27,7 +27,7 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
-		organizeFiles.main(new String[0]);		//put all the files into the directory for R to visualize
+		//organizeFiles.main(new String[0]);		//put all the files into the directory for R to visualize
 //		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
 //		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
 //		{
@@ -41,7 +41,7 @@ public class CodonComparison {
 	}
 	
 	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
-	public static int[] numberOfAlignedCodons(String recon, String extant)
+	public static int[] RFCScore(String recon, String extant)
 	{
 		StringBuilder rec = new StringBuilder(recon);				//using stringbuilder to save on costs
 		StringBuilder ext = new StringBuilder(extant);		
@@ -128,10 +128,58 @@ public class CodonComparison {
 //		return new int[] {alignedCodons, codons};
 	}
 	
+	public static int RFCScore(String recon, String extant, int start, int stop)
+	{
+		StringBuilder rec = new StringBuilder(recon);				//using stringbuilder to save on costs
+		StringBuilder ext = new StringBuilder(extant);		
+		StringBuilder recRFC = new StringBuilder();
+		StringBuilder extRFC = new StringBuilder();		
+		int alignedCount = 0;
+		int length = recon.length();
+		//appending 1,2,3
+		int[] RFCArr = new int[] {1,2,3};
+		int recCount = 0;
+		int extCount = 0;
+		//now we cycle through the strings, assigning 0,1,2,3 to the RFC strings
+		for(int i = 0; i < length; i++) {
+			//assigning numbers to the reconstruction
+			if(rec.charAt(i) == '-') {
+				recRFC.append(0);
+			}
+			else {
+				recRFC.append(RFCArr[recCount]);	//add 1, 2, or 3
+				recCount = nextDigit(recCount);		//get the next number ready
+			}
+			
+			//assigning numbers to the extant
+			if(ext.charAt(i) == '-') {
+				extRFC.append(0);
+			}
+			else {
+				extRFC.append(RFCArr[extCount]);	//add 1, 2, or 3
+				extCount = nextDigit(extCount);		//get the next number ready
+			}
+			
+		}
+		//we have built the RFC Strings. now we take a substring of all 4 and compare
+		String reconORF = rec.substring(start,stop);
+		String extantORF = ext.substring(start,stop);
+		String reconORF_RFC = recRFC.substring(start,stop);
+		String extantORF_RFC = extRFC.substring(start,stop);
+		
+//		System.out.println(reconORF);
+//		System.out.println(reconORF_RFC);
+//		System.out.println(extantORF);
+//		System.out.println(extantORF_RFC);
+//		System.out.println();
+		
+		return alignedCount;
+
+	}
 	
 	public static void getEmergingORFs() throws IOException
 	{
-		String path = "D:\\College\\TECBio\\CodonComparison";	//create a string with the path of the current directory, will be used and edited
+		String path = "D:\\College\\TECBio\\CodonComparisonTest";	//create a string with the path of the current directory, will be used and edited
 		File dir = new File(path);								//creating the file of the current directory
 		System.out.println(dir.getAbsolutePath());				//testing
 		
@@ -161,6 +209,7 @@ public class CodonComparison {
 				extant = str + locus + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
 				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
 				System.out.println("Extant seq: " + extant);
+				System.out.println();
 				
 				//output table file for ORF alignment
 				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
@@ -181,62 +230,91 @@ public class CodonComparison {
 				
 				//pairwise alignment of each reconstruction with the extant sequence
 				for(String y: recons) {
-					//get the longest ORF/coding sequence from the reconstruction
-					//find all the start indices in the reconstruction
-					ArrayList<Integer> startIndices = findAllStart(y);
-					//run findCodingSequence on all these start codons
-					ArrayList<String> codingSequences = new ArrayList<String>();
-					//run through the indexes of the start codons, find the ORF corresponding to it
-					for(int j = 0; j < startIndices.size(); j++)
-					{
-						ORF = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
-						codingSequences.add(ORF);
-					}					
-					//now, codingSequences should be full of the potential coding sequences
-					//just select the longest of them and use that as our coding sequence
-					Collections.sort(codingSequences, Comparator.comparing(String :: length));
-					//use recon again to get the largest coding sequence from the reconstruction and use that in our alignment
-					
-					
-					//if the table has an entry, we probably found a coding seq, but it could be "BAD"
-					if(codingSequences.size() != 0) {
-						ORF = codingSequences.get(codingSequences.size() - 1);	
-						//"BAD" means no coding sequence was found
-						if(ORF.equals("BAD")) {
-							ORF = "NA";
-							results = new int[] {-1,-1};
-							outTable(writer, results, count);
-							count++;
-						}
-						//otherwise, we can proceed with the alignment
-						else { 
-							alignment = align(ORF, extant);	//align the sequences
-							rec = alignment.getQuery();
-							ext = alignment.getTarget();
-							ORF = rec.toString();						//string representation of the ORF from reconstruction alignment
-							extant = ext.toString();					//string representation of the extant alignment
-							results = numberOfAlignedCodons(ORF, extant);
-							outTable(writer, results, count);
-							count++;
-						}
-
-					}
-					//if the table is empty, no ORF was found
-					else {
-						ORF = "NA";
-						results = new int[] {-1,-1};
-						outTable(writer, results, count);
-						count++;
-					}
-					
+//					//get the longest ORF/coding sequence from the reconstruction
+//					//find all the start indices in the reconstruction
+//					ArrayList<Integer> startIndices = findAllStart(y);
+//					//run findCodingSequence on all these start codons
+//					ArrayList<String> codingSequences = new ArrayList<String>();
+//					//run through the indexes of the start codons, find the ORF corresponding to it
+//					for(int j = 0; j < startIndices.size(); j++)
+//					{
+//						ORF = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
+//						codingSequences.add(ORF);
+//					}					
+//					//now, codingSequences should be full of the potential coding sequences
+//					//just select the longest of them and use that as our coding sequence
+//					Collections.sort(codingSequences, Comparator.comparing(String :: length));
+//					//use recon again to get the largest coding sequence from the reconstruction and use that in our alignment
+//					
+//					
+//					//if the table has an entry, we probably found a coding seq, but it could be "BAD"
+//					if(codingSequences.size() != 0) {
+//						ORF = codingSequences.get(codingSequences.size() - 1);	
+//						//"BAD" means no coding sequence was found
+//						if(ORF.equals("BAD")) {
+//							ORF = "NA";
+//							results = new int[] {-1,-1};
+//							outTable(writer, results, count);
+//							count++;
+//						}
+//						//otherwise, we can proceed with the alignment
+//						else { 
+//							alignment = align(ORF, extant);	//align the sequences
+//							rec = alignment.getQuery();
+//							ext = alignment.getTarget();
+//							ORF = rec.toString();						//string representation of the ORF from reconstruction alignment
+//							extant = ext.toString();					//string representation of the extant alignment
+//							results = numberOfAlignedCodons(ORF, extant);
+//							outTable(writer, results, count);
+//							count++;
+//						}
+//
+//					}
+//					//if the table is empty, no ORF was found
+//					else {
+//						ORF = "NA";
+//						results = new int[] {-1,-1};
+//						outTable(writer, results, count);
+//						count++;
+//					}
+//					
 					//now we do the alignment of the raw reconstructions and output to the other file, can reuse objects 
 					alignment = align(y, extant);				//align the sequences
 					rec = alignment.getQuery();
 					ext = alignment.getTarget();
 					recon = rec.toString();						//string representation of the reconstruction alignment
 					extant = ext.toString();					//string representation of the extant alignment
+					ArrayList<Integer> startIndices = findAllStart(alignment);							//get the start codons
+					ArrayList<Integer> stopIndices = new ArrayList<Integer>();		//get the corresponding stop codons
+					ArrayList<Integer> RFCscores = new ArrayList<Integer>();		//holds the RFC scores
+					//find corresponsing stopindex for each startindex
+					int startIndex;
+					int stopIndex;
+					int result;
+					for(int j = 0; j < startIndices.size(); j++)
+					{
+						startIndex = startIndices.get(j);
+						stopIndex = findStop(alignment, startIndex);		//here recon is used as a holder for the ORF being found
+						stopIndices.add(stopIndex);									//add the corresponding stop codon location
+						if(stopIndex != -1)											//if a stop codon is found, we get the RFC score for the ORF IN THE ALIGNMENT
+						{
+							result = RFCScore(recon, extant, startIndex, stopIndex);					//get number of aligned positions
+							RFCscores.add(result);
+						}
+						
+					}		
+					System.out.println("start indexes length: " + startIndices.size());
+					System.out.println("stop indexes length:  " + stopIndices.size());	
+					System.out.println();	
 					
-					results = numberOfAlignedCodons(recon, extant);
+
+					//find the RFC scores for every ORF in the alignment
+
+
+					
+					
+					
+					results = RFCScore(recon, extant);
 					outTable(rawWriter, results, rawCount);
 					rawCount++;
 
@@ -246,7 +324,7 @@ public class CodonComparison {
 //					System.out.println(extant);
 //					System.out.println(results[0] + "/" + results[1]);
 //					System.out.println();
-//					
+					
 				}
 				
 				
@@ -681,6 +759,7 @@ public class CodonComparison {
 		
 	}
 	
+	
 	public static String findORF(String seq, int startIndex)
 	{
 		int stopIndex = -1;
@@ -716,11 +795,13 @@ public class CodonComparison {
         ArrayList<Integer> indexes = new ArrayList<Integer>();
         int index = 0;
         while(index != -1){
-            index = ORF.indexOf(START, index + 3);
+            index = ORF.indexOf(START, index);
             if (index != -1) {
                 indexes.add(index);
+                index += 3;
             }
         }
+		
 		/*TESTING
 		System.out.println("Indexes array list size: " + indexes.size());
 		System.out.println("seq size: " + ORF.length());
@@ -745,6 +826,171 @@ public class CodonComparison {
 		
 		return ret;
 	}
+	
+	/*these overloaded methods will find all the ORFs within the raw alignment, calculate the highest RFC score, and choose the one with the highest score and use that as our 
+		number of aligned codons.			*/
+	//this method will find all the start codons within the aligned reconstruction sequence
+	public static ArrayList<Integer> findAllStart(SequencePair<DNASequence, NucleotideCompound> psa)
+	{
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+		AlignedSequence<DNASequence, NucleotideCompound> rec = psa.getQuery();
+		AlignedSequence<DNASequence, NucleotideCompound> ext = psa.getTarget();
+		String x = rec.toString();						//string representation of the reconstruction alignment
+		String y = ext.toString();					//string representation of the extant alignment
+		StringBuilder recon = new StringBuilder(x);
+		StringBuilder extant = new StringBuilder(y);
+		
+		StringBuilder gapless = new StringBuilder();
+		ArrayList<Integer> pos = new ArrayList<Integer>();
+		int gaps = 0;
+		for(int i = 0; i < recon.length(); i++) 
+		{
+			char ch = recon.charAt(i);		//char at this position
+			if(ch != '-')					//if it isnt a gap 
+			{
+				gapless.append(ch);			//append the character
+				pos.add(i);				//append its position
+			}
+			else gaps++;					//test
+		
+		}
+		
+//		for(int i = 0; i < pos.size(); i++){
+//			System.out.println(pos.get(i));
+//		}
+//		
+		
+		
+		//get all the start codons in the gapless string
+		String gape = gapless.toString();
+        int index = 0;
+        while(index != -1){
+            index = gape.indexOf(START, index);
+            if (index != -1) {
+            	int p = pos.get(index);	//get the position of the start codon in the aligned sequence recon
+                indices.add(p);
+                index += 3;
+            }
+        }
+		
+		
+//		System.out.println(recon);
+//		System.out.println(gapless);
+//		System.out.println(pos);
+//		System.out.println("Gaps: " + gaps);
+//		System.out.println();
+//		
+//		for(Integer d : indices) {
+//			System.out.println(d);
+//		}
+//		
+//		System.out.println();
+		
+		//this works!
+		return indices;		
+	}
+	
+	//this method will find the next stop codon's index and return it. Once it is returned, the substrings in both aligned strings from these sequences will be counted with
+	//numberOfAlignedCodons() and the RFC score will be stored. 
+	public static int findStop(SequencePair<DNASequence, NucleotideCompound> psa, int startIndex)
+	{
+		AlignedSequence<DNASequence, NucleotideCompound> rec = psa.getQuery();
+		String trueReconstruction = rec.toString();						//string representation of the reconstruction alignment
+		
+		//get the aligned string past the startIndex
+		String x = trueReconstruction.substring(startIndex);
+		StringBuilder recon = new StringBuilder(x);
+		//declare holders
+		StringBuilder gapless = new StringBuilder();
+		ArrayList<Integer> pos = new ArrayList<Integer>();
+		//get rid of the gaps
+		int gaps = 0;
+		for(int i = 0; i < recon.length(); i++) 
+		{
+			char ch = recon.charAt(i);		//char at this position
+			if(ch != '-')					//if it isnt a gap 
+			{
+				gapless.append(ch);			//append the character
+				pos.add(i);					//append its position
+			}
+			else gaps++;					//test
+		
+		}
+		
+		//find the stop codon location
+		int stopIndex = -1;
+		String codon;
+		//cycle through the string starting from the startIndex
+		for(int i = 0; i < gapless.length(); i+=3){
+			if(i + 3 >= gapless.length())
+			{
+				codon = gapless.substring(i, gapless.length());
+			}
+			else
+			{
+				codon = gapless.substring(i, i+3);
+			}
+			if(isStop(codon))
+			{
+				stopIndex = i + 3;
+				break;
+			}
+		}
+		
+		//we found the inframe stop codon. now we find the corresponding index in recon and add startIndex to get its true position
+		if(stopIndex != -1) 
+		{
+			if(stopIndex != pos.size())
+			{
+				stopIndex = pos.get(stopIndex);	
+				stopIndex = stopIndex + startIndex;	
+			}
+			else
+			{
+				stopIndex = pos.get(pos.size() - 1);	
+				stopIndex = stopIndex + startIndex + 1;	
+			}
+				
+
+			//testing
+//			System.out.println("Aligned recon:                  " + trueReconstruction);
+//			System.out.println("Aligned recon from start Index: " + x);		
+//			System.out.println("Gapless start Index:            " + gapless);
+//			System.out.println("Corresponding Positions:        " + pos);
+//			System.out.println("testing start stop substring:   " + trueReconstruction.substring(startIndex, stopIndex));		
+//			System.out.println();
+		}
+		
+
+
+		
+		return stopIndex;
+		
+		
+	}
+	
+	
+	//Then, after all the ORFs have been processed, the ORF with the highest RFC score will be selected. need to figure this out still
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	//method to check if a codon is a stop codon
 	public static boolean isStop(String codon)
 	{
