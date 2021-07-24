@@ -318,9 +318,9 @@ public class CodonComparison {
 					results = new int[] {max, recon.length()};
 					
 					
-					System.out.println("start indexes length: " + startIndices.size());
-					System.out.println("stop indexes length:  " + stopIndices.size());	
-					System.out.println();	
+//					System.out.println("start indexes length: " + startIndices.size());
+//					System.out.println("stop indexes length:  " + stopIndices.size());	
+//					System.out.println();	
 
 					
 					outTable(rawWriter, results, rawCount);
@@ -371,25 +371,25 @@ public class CodonComparison {
 		{
 			switch(i) {
 			case 0: recons[i] = fastML_free_marg(path + "\\" + reconDirs[0]); 
-					System.out.println("fastML_free_marg: " + recons[i]);
+					//System.out.println("fastML_free_marg: " + recons[i]);
 					break;
 			case 1: recons[i] = fastML_free_joint(path + "\\" + reconDirs[0]); 
-					System.out.println("fastML_free_joint: " + recons[i]);
+					//System.out.println("fastML_free_joint: " + recons[i]);
 					break;
 			case 2: recons[i] = fastML_sp_marg(path + "\\" + reconDirs[1]); 
-					System.out.println("fastML_sp_marg: " + recons[i]);
+					//System.out.println("fastML_sp_marg: " + recons[i]);
 					break;
 			case 3: recons[i] = fastML_sp_joint(path + "\\" + reconDirs[1]); 
-					System.out.println("fastML_sp_joint: " + recons[i]);
+					//System.out.println("fastML_sp_joint: " + recons[i]);
 					break;
 			case 4: recons[i] = prank_free(path + "\\" + reconDirs[2]); 
-					System.out.println("prank_free: " + recons[i]);
+					//System.out.println("prank_free: " + recons[i]);
 					break;
 			case 5: recons[i] = prank_sp(path + "\\" + reconDirs[3]); 
-					System.out.println("prank_sp: " + recons[i]); 
+					//System.out.println("prank_sp: " + recons[i]); 
 					break;
 			case 6: recons[i] = prequel_sp(path + "\\" + reconDirs[5]); 
-					System.out.println("prequel_sp: " + recons[i]); 
+					//System.out.println("prequel_sp: " + recons[i]); 
 					break;
 			default: System.out.println("ERROR");
 			}
