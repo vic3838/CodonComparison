@@ -20,7 +20,7 @@ public class organizeFiles {
 			//System.out.println(str);
 			if(x.isDirectory()) {		//if we have a directory
 				locus = str.substring(str.lastIndexOf("\\") + 1);		//get the name of the ORF will be used in several ops
-				rawAlignment = str + "\\" + locus + "_HighestAlignedORFRFCScore.txt";
+				rawAlignment = str + "\\" + locus + "_HighestAlignedORFRFCScore.txt"; 
 				
 				//System.out.println(codingAlignment);
 				//System.out.println(rawAlignment);
