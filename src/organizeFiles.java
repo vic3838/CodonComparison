@@ -17,27 +17,26 @@ public class organizeFiles {
 		for(File x : emergingORFs)
 		{		
 			String str = x.getAbsolutePath();				//path to the ORF folder
-			System.out.println(str);
+			//System.out.println(str);
 			if(x.isDirectory()) {		//if we have a directory
 				locus = str.substring(str.lastIndexOf("\\") + 1);		//get the name of the ORF will be used in several ops
-				codingAlignment = str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt";		//set to file name of one file to be copied
-				rawAlignment = str + "\\" + locus + "_alignedCodonsByRawReconstruction.txt";
+				rawAlignment = str + "\\" + locus + "_HighestAlignedORFRFCScore.txt";
 				
-				System.out.println(codingAlignment);
-				System.out.println(rawAlignment);
+				//System.out.println(codingAlignment);
+				//System.out.println(rawAlignment);
 				//we have the paths to the files, now we copy them to the directory
 				//D:\College\TECBio\alignedCodonsPlot\......
 				
 				//first, we need to create the destination file address
-				fileName = codingAlignment.substring(codingAlignment.lastIndexOf("\\") + 1);			
-				dest = "D:\\College\\TECBio\\alignedCodonsPlot\\" + fileName;
-				System.out.println(dest);
-				copyFileUsingStream( new File(codingAlignment), new File(dest) );
+//				fileName = codingAlignment.substring(codingAlignment.lastIndexOf("\\") + 1);			
+//				dest = "D:\\College\\TECBio\\alignedCodonsPlot\\" + fileName;
+//				//System.out.println(dest);
+//				copyFileUsingStream( new File(codingAlignment), new File(dest) );
 				
 				fileName = rawAlignment.substring(rawAlignment.lastIndexOf("\\") + 1);
-				dest = "D:\\College\\TECBio\\alignedCodonsPlot\\" + fileName;
-				System.out.println(dest);
-				System.out.println();
+				dest = "D:\\College\\TECBio\\RFCScorePlot\\" + fileName;
+				//System.out.println(dest);
+				//System.out.println();
 				copyFileUsingStream( new File(rawAlignment), new File(dest) );
 		
 			}
