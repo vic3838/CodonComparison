@@ -5,7 +5,7 @@ public class organizeFiles {
 	//this script is to organize all the output files into one directory
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-		File targetDir = new File("D:\\College\\TECBio\\CodonComparison\\alignedCodonsPlot");
+		File targetDir = new File("D:\\College\\TECBio\\RFCScorePlot");
 		File seekerPath = new File("D:\\College\\TECBio\\CodonComparison");
 		String locus;				//locus, title of the directory
 		String codingAlignment;		//file name of ORF alignment

@@ -27,17 +27,8 @@ public class CodonComparison {
 	public static void main(String[] args) throws IOException {
 		//this method will print out the LCA sequence reconstruction from every tool
 		getEmergingORFs();
-		//organizeFiles.main(new String[0]);		//put all the files into the directory for R to visualize
-//		List<AlignedSequence<DNASequence, NucleotideCompound>> alignedSeqs = align();
-//		for(AlignedSequence<DNASequence, NucleotideCompound> x : alignedSeqs)
-//		{
-//			System.out.println(x.toString());
-//		}
-		
-		
-		//TODO: make the void methods getEmergingORFs and align return actual values that can be operated on in the main method, will need to loop
-		//		might have to call align() from getEmergingORFs()
-		//now that i have the aligned sequences, the next basic step is to get the # of aligned codons and output them to a table
+		organizeFiles.main(new String[0]);		//put all the files into the directory for R to visualize
+
 	}
 	
 	//take 2 sequences, reconstruction and extant sequence, and find the number of conserved codons 
@@ -167,6 +158,14 @@ public class CodonComparison {
 		String reconORF_RFC = recRFC.substring(start,stop);
 		String extantORF_RFC = extRFC.substring(start,stop);
 		
+		for(int i = 0; i < reconORF.length(); i++)
+		{
+			if( (reconORF.charAt(i) == (extantORF.charAt(i))) && reconORF_RFC.charAt(i) != '0' && (extantORF_RFC.charAt(i) != '0')) {
+				alignedCount++;
+			}
+		}
+		
+		
 //		System.out.println(reconORF);
 //		System.out.println(reconORF_RFC);
 //		System.out.println(extantORF);
@@ -179,7 +178,7 @@ public class CodonComparison {
 	
 	public static void getEmergingORFs() throws IOException
 	{
-		String path = "D:\\College\\TECBio\\CodonComparisonTest";	//create a string with the path of the current directory, will be used and edited
+		String path = "D:\\College\\TECBio\\CodonComparison";	//create a string with the path of the current directory, will be used and edited
 		File dir = new File(path);								//creating the file of the current directory
 		System.out.println(dir.getAbsolutePath());				//testing
 		
@@ -212,18 +211,18 @@ public class CodonComparison {
 				System.out.println();
 				
 				//output table file for ORF alignment
-				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
-				FileWriter fwrite = new FileWriter(newFile);
-				PrintWriter writer = new PrintWriter(fwrite);
+//				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
+//				FileWriter fwrite = new FileWriter(newFile);
+//				PrintWriter writer = new PrintWriter(fwrite);
 				
 				//output table file for the raw alignment
-				File rawFile = new File(str + "\\" + locus + "_alignedCodonsByRawReconstruction.txt");
+				File rawFile = new File(str + "\\" + locus + "_HighestAlignedORFRFCScore.txt");
 				FileWriter wwrite = new FileWriter(rawFile);
 				PrintWriter rawWriter = new PrintWriter(wwrite);
 				
-				//set up the files
-				writer.println("tool\taligned_codons");
-				//writer.println("____________________");
+//				//set up the files
+//				writer.println("tool\taligned_codons");
+//				//writer.println("____________________");
 					
 				rawWriter.println("tool\taligned_codons");
 				//rawWriter.println("____________________");
@@ -291,6 +290,7 @@ public class CodonComparison {
 					int startIndex;
 					int stopIndex;
 					int result;
+					//find the RFC scores for every ORF in the alignment
 					for(int j = 0; j < startIndices.size(); j++)
 					{
 						startIndex = startIndices.get(j);
@@ -303,18 +303,26 @@ public class CodonComparison {
 						}
 						
 					}		
+					//loop over the RFCScores, find the biggest one
+					int max = 0;
+					int score;
+					for(int j = 0; j < RFCscores.size(); j++)
+					{
+						score = RFCscores.get(j);
+						if(score > max) {
+							max = score;		//found a new max
+						}
+					}
+					
+					
+					results = new int[] {max, recon.length()};
+					
+					
 					System.out.println("start indexes length: " + startIndices.size());
 					System.out.println("stop indexes length:  " + stopIndices.size());	
 					System.out.println();	
-					
-
-					//find the RFC scores for every ORF in the alignment
-
 
 					
-					
-					
-					results = RFCScore(recon, extant);
 					outTable(rawWriter, results, rawCount);
 					rawCount++;
 
@@ -344,7 +352,7 @@ public class CodonComparison {
 //				
 //				System.out.println();
 
-				writer.close();
+//				writer.close();
 				rawWriter.close();
 			}
 			
