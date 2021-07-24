@@ -207,8 +207,8 @@ public class CodonComparison {
 				locus = str.substring(str.lastIndexOf("\\"));
 				extant = str + locus + "_ali.fa";	//set extant to the path to the file containing the extant Scer sequence
 				extant = getExtantSequence(extant);									//redefine extant to the extant sequence itself
-				System.out.println("Extant seq: " + extant);
-				System.out.println();
+//				System.out.println("Extant seq: " + extant);
+//				System.out.println();
 				
 				//output table file for ORF alignment
 //				File newFile = new File(str + "\\" + locus + "_alignedCodonsByLongestCodingSequence.txt");
@@ -228,104 +228,75 @@ public class CodonComparison {
 				//rawWriter.println("____________________");
 				
 				//pairwise alignment of each reconstruction with the extant sequence
-				for(String y: recons) {
-//					//get the longest ORF/coding sequence from the reconstruction
-//					//find all the start indices in the reconstruction
-//					ArrayList<Integer> startIndices = findAllStart(y);
-//					//run findCodingSequence on all these start codons
-//					ArrayList<String> codingSequences = new ArrayList<String>();
-//					//run through the indexes of the start codons, find the ORF corresponding to it
-//					for(int j = 0; j < startIndices.size(); j++)
-//					{
-//						ORF = findORF(y, startIndices.get(j));		//here recon is used as a holder for the ORF being found
-//						codingSequences.add(ORF);
-//					}					
-//					//now, codingSequences should be full of the potential coding sequences
-//					//just select the longest of them and use that as our coding sequence
-//					Collections.sort(codingSequences, Comparator.comparing(String :: length));
-//					//use recon again to get the largest coding sequence from the reconstruction and use that in our alignment
-//					
-//					
-//					//if the table has an entry, we probably found a coding seq, but it could be "BAD"
-//					if(codingSequences.size() != 0) {
-//						ORF = codingSequences.get(codingSequences.size() - 1);	
-//						//"BAD" means no coding sequence was found
-//						if(ORF.equals("BAD")) {
-//							ORF = "NA";
-//							results = new int[] {-1,-1};
-//							outTable(writer, results, count);
-//							count++;
-//						}
-//						//otherwise, we can proceed with the alignment
-//						else { 
-//							alignment = align(ORF, extant);	//align the sequences
-//							rec = alignment.getQuery();
-//							ext = alignment.getTarget();
-//							ORF = rec.toString();						//string representation of the ORF from reconstruction alignment
-//							extant = ext.toString();					//string representation of the extant alignment
-//							results = numberOfAlignedCodons(ORF, extant);
-//							outTable(writer, results, count);
-//							count++;
-//						}
-//
-//					}
-//					//if the table is empty, no ORF was found
-//					else {
-//						ORF = "NA";
-//						results = new int[] {-1,-1};
-//						outTable(writer, results, count);
-//						count++;
-//					}
-//					
-					//now we do the alignment of the raw reconstructions and output to the other file, can reuse objects 
-					alignment = align(y, extant);				//align the sequences
-					rec = alignment.getQuery();
-					ext = alignment.getTarget();
-					recon = rec.toString();						//string representation of the reconstruction alignment
-					extant = ext.toString();					//string representation of the extant alignment
-					ArrayList<Integer> startIndices = findAllStart(alignment);							//get the start codons
-					ArrayList<Integer> stopIndices = new ArrayList<Integer>();		//get the corresponding stop codons
-					ArrayList<Integer> RFCscores = new ArrayList<Integer>();		//holds the RFC scores
-					//find corresponsing stopindex for each startindex
-					int startIndex;
-					int stopIndex;
-					int result;
-					//find the RFC scores for every ORF in the alignment
-					for(int j = 0; j < startIndices.size(); j++)
+				for(String y: recons) {					
+					if(!y.equals(""))	//if prequel_sp did returned something valid
 					{
-						startIndex = startIndices.get(j);
-						stopIndex = findStop(alignment, startIndex);		//here recon is used as a holder for the ORF being found
-						stopIndices.add(stopIndex);									//add the corresponding stop codon location
-						if(stopIndex != -1)											//if a stop codon is found, we get the RFC score for the ORF IN THE ALIGNMENT
+						//now we do the alignment of the raw reconstructions and output to the other file, can reuse objects 
+						alignment = align(y, extant);				//align the sequences
+						rec = alignment.getQuery();
+						ext = alignment.getTarget();
+						recon = rec.toString();						//string representation of the reconstruction alignment
+						extant = ext.toString();					//string representation of the extant alignment
+						ArrayList<Integer> startIndices = findAllStart(alignment);							//get the start codons
+						ArrayList<Integer> stopIndices = new ArrayList<Integer>();		//get the corresponding stop codons
+						//if we don't find any corresponding stop codons, no ORFs were found and we need to output N/A
+						if(stopIndices.size() != 0) 
 						{
-							result = RFCScore(recon, extant, startIndex, stopIndex);					//get number of aligned positions
-							RFCscores.add(result);
+							ArrayList<Integer> RFCscores = new ArrayList<Integer>();		//holds the RFC scores
+							//find corresponsing stopindex for each startindex
+							int startIndex;
+							int stopIndex;
+							int result;
+							//find the RFC scores for every ORF in the alignment
+							for(int j = 0; j < startIndices.size(); j++)
+							{
+								startIndex = startIndices.get(j);
+								stopIndex = findStop(alignment, startIndex);		//here recon is used as a holder for the ORF being found
+								stopIndices.add(stopIndex);									//add the corresponding stop codon location
+								if(stopIndex != -1)											//if a stop codon is found, we get the RFC score for the ORF IN THE ALIGNMENT
+								{
+									result = RFCScore(recon, extant, startIndex, stopIndex);					//get number of aligned positions
+									RFCscores.add(result);
+								}
+								
+							}		
+							//loop over the RFCScores, find the biggest one
+							int max = 0;
+							int score;
+							for(int j = 0; j < RFCscores.size(); j++)
+							{
+								score = RFCscores.get(j);
+								if(score > max) {
+									max = score;		//found a new max
+								}
+							}
+							
+							
+							results = new int[] {max, recon.length()};
+							
+							
+//							System.out.println("start indexes length: " + startIndices.size());
+//							System.out.println("stop indexes length:  " + stopIndices.size());	
+//							System.out.println();	
+
+							
+							outTable(rawWriter, results, rawCount);
+							rawCount++;
+						}
+						else	//this is where we output N/A if no ORF was found
+						{
+							outTable(rawWriter, new int[] {-1,-1}, rawCount);
+							rawCount++;
 						}
 						
-					}		
-					//loop over the RFCScores, find the biggest one
-					int max = 0;
-					int score;
-					for(int j = 0; j < RFCscores.size(); j++)
+
+					}
+					else	//if prequel_sp returns "" because the file wasn't found, we just output N/A
 					{
-						score = RFCscores.get(j);
-						if(score > max) {
-							max = score;		//found a new max
-						}
+						outTable(rawWriter, new int[] {-1,-1}, rawCount);
+						rawCount++;
 					}
 					
-					
-					results = new int[] {max, recon.length()};
-					
-					
-//					System.out.println("start indexes length: " + startIndices.size());
-//					System.out.println("stop indexes length:  " + stopIndices.size());	
-//					System.out.println();	
-
-					
-					outTable(rawWriter, results, rawCount);
-					rawCount++;
-
 		
 					
 //					System.out.println(ORF);
@@ -437,17 +408,25 @@ public class CodonComparison {
 	}
 	private static String prequel_sp(String path)	throws IOException
 	{
-		path += "\\ORF_alignement.Seub-Sarb.fa";		//create the path for the file we need to open	
-		Scanner fileScan = new Scanner(new FileInputStream(path));
-		String fileLine = "";
 		String seq = "";
-		while(fileScan.hasNextLine()){
-			fileLine = fileScan.nextLine();		
-			if(fileLine.charAt(0) != '>')
-			{
-				seq += fileLine;
+		path += "\\ORF_alignement.Seub-Sarb.fa";		//create the path for the file we need to open	
+		File file = new File(path);
+		if(file.exists())
+		{
+			FileInputStream stream = new FileInputStream(path);
+			Scanner fileScan = new Scanner(stream);
+			String fileLine = "";
+			while(fileScan.hasNextLine()){
+				fileLine = fileScan.nextLine();		
+				if(fileLine.charAt(0) != '>')
+				{
+					seq += fileLine;
+				}
 			}
+			fileScan.close();
+			stream.close();
 		}
+
 		
 		return seq;
 	}
